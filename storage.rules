@@ -1,0 +1,19 @@
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Fungsi pembantu
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /{allPaths=**} {
+      // Izinkan baca jika user terautentikasi
+      allow read: if isSignedIn();
+      // Izinkan tulis jika user terautentikasi dan ukuran file < 5MB
+      allow write: if isSignedIn() && request.resource.size < 5 * 1024 * 1024;
+    }
+  }
+}

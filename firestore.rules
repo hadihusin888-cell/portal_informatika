@@ -1,0 +1,86 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fungsi pembantu untuk mengecek status login
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Fungsi pembantu untuk mengambil data user (tanpa rekursi)
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Fungsi pembantu untuk mengecek apakah user adalah ADMIN
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'ADMIN';
+    }
+
+    // Fungsi pembantu untuk mengecek apakah user adalah pemilik dokumen
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- ATURAN KOLEKSI USERS ---
+    match /users/{userId} {
+      // Izinkan baca publik (untuk pendaftaran & login)
+      allow read: if true; 
+      
+      // Izinkan pembuatan akun baru
+      allow create: if true;
+      
+      // Update hanya boleh oleh pemilik atau Admin
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      
+      // Hanya Admin yang bisa hapus
+      allow delete: if isAdmin();
+    }
+
+    // --- ATURAN KELAS ---
+    match /elearning_classes/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // --- ATURAN MATERI & TUGAS ---
+    match /elearning_materials/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    match /elearning_tasks/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- ATURAN PENGUMPULAN TUGAS (SUBMISSIONS) ---
+    match /elearning_submissions/{id} {
+      // List hanya jika Admin, atau jika query difilter berdasarkan studentId milik sendiri
+      allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100 && resource.data.studentId == request.auth.uid);
+      allow get: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // --- ATURAN NOTIFIKASI ---
+    match /elearning_notifications/{id} {
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() || true; 
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // --- ATURAN PENGATURAN SITUS ---
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
