@@ -267,7 +267,7 @@ const App: React.FC = () => {
           settings={settings} 
         />
       )}
-      {view === 'login' && <Login role={loginRole || 'STUDENT'} onBack={() => setView('landing')} onLogin={(u) => { setUser(u); setView('dashboard'); }} onNavigateSignup={() => setView('signup')} />}
+      {view === 'login' && <Login role={loginRole || 'STUDENT'} onBack={() => setView('landing')} onLogin={(u) => { setUser(u); setView('dashboard'); }} onNavigateSignup={() => setView('signup')} logoUrl={settings.logoUrl} />}
       {view === 'signup' && <Signup onBack={() => setView('login')} onSignup={() => { setLoginRole('STUDENT'); setView('login'); }} logoUrl={settings.logoUrl} />}
       {view === 'dashboard' && user && (
         user.role === 'ADMIN' 

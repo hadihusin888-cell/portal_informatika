@@ -15,9 +15,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 glass-effect h-20 px-6 lg:px-20 flex items-center justify-between border-b border-slate-100/50">
         <div className="flex items-center gap-4">
-          <div className="p-2 bg-emerald-600 rounded-xl shadow-lg shadow-emerald-100">
-            <Cpu size={24} className="text-white" />
-          </div>
+          <img 
+            src={settings.logoUrl} 
+            alt="Logo SMP Al Irsyad" 
+            className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
+          />
           <div className="hidden lg:block h-6 w-[1px] bg-slate-200 mx-1"></div>
           <h1 className="hidden sm:block text-lg font-black tracking-tight text-slate-800">
             AL IRSYAD <span className="text-emerald-600">INFORMATIKA</span>
@@ -89,8 +91,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
                 />
               </div>
               
-              {/* Floating Element 1 */}
-              <div className="absolute -top-8 -right-8 bg-white p-6 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-50 animate-bounce hidden sm:block">
+              {/* Floating Element - Real-time Sync (Bottom Left) */}
+              <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-50 hidden sm:block animate-bounce">
                  <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
                        <Zap size={24} className="fill-blue-600" />
@@ -98,19 +100,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
                     <div>
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time</p>
                        <p className="text-lg font-black text-slate-800">Sync Cloud</p>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Floating Element 2 */}
-              <div className="absolute -bottom-10 -left-10 bg-slate-900 p-6 rounded-3xl shadow-2xl hidden sm:block">
-                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/10 text-emerald-400 rounded-2xl flex items-center justify-center">
-                       <Users size={24} />
-                    </div>
-                    <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Komunitas</p>
-                       <p className="text-lg font-black text-white italic">1200+ Siswa</p>
                     </div>
                  </div>
               </div>
@@ -171,9 +160,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
       <footer className="py-20 px-6 bg-slate-950 text-slate-500 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-10">
           <div className="flex items-center gap-4">
-            <div className="p-2 bg-white/10 rounded-xl">
-              <Cpu size={32} className="text-white" />
-            </div>
+            <img 
+              src={settings.logoUrl} 
+              alt="Logo SMP Al Irsyad" 
+              className="h-16 w-auto object-contain" 
+            />
             <span className="text-2xl font-black text-white tracking-tighter italic">AL IRSYAD <span className="text-emerald-500">INFORMATIKA</span></span>
           </div>
           <div className="h-[1px] w-full max-w-md bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>

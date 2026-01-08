@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, History, Clock, ClipboardCheck, Search, Filter, ClipboardList, ExternalLink, GraduationCap, X, Eye, Award, Star, MessageCircle, Save } from 'lucide-react';
+import { Loader2, History, Clock, ClipboardCheck, Search, Filter, ClipboardList, ExternalLink, GraduationCap, X, Eye, Award, Star, MessageCircle, Save, MessageSquare } from 'lucide-react';
 import { db } from '../../App.tsx';
 import { Submission, Task, User, ClassRoom } from '../../types.ts';
 import { notifyStudents } from '../../utils/helpers.ts';
@@ -68,12 +68,16 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
     }
     
     try {
-      const updatedSubmission = { ...gradeModal, grade: Number(gradeModal.grade) };
+      const updatedSubmission = { 
+        ...gradeModal, 
+        grade: Number(gradeModal.grade),
+        feedback: gradeModal.feedback || '' 
+      };
       await db.update('elearning_submissions', gradeModal.id, updatedSubmission);
       setSubs(subs.map(s => s.id === gradeModal.id ? updatedSubmission : s));
       
       notifyStudents([], "Tugas Telah Dinilai!", `Tugas Anda telah dinilai dengan skor ${gradeModal.grade}.`, "grade", gradeModal.studentId);
-      alert("Nilai berhasil disimpan!");
+      alert("Nilai dan umpan balik berhasil disimpan!");
       setGradeModal(null);
     } catch (err) {
       alert("Gagal menyimpan nilai.");
@@ -249,22 +253,37 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
                   </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Skor Penilaian (0-100)</label>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      max="100" 
-                      value={gradeModal.grade === null ? '' : gradeModal.grade} 
-                      onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} 
-                      placeholder="Masukkan Angka..." 
-                      className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl text-3xl font-black text-indigo-600 outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner" 
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Skor Penilaian (0-100)</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        value={gradeModal.grade === null ? '' : gradeModal.grade} 
+                        onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} 
+                        placeholder="Masukkan Angka..." 
+                        className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl text-3xl font-black text-indigo-600 outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner" 
+                      />
+                    </div>
+                    <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-[0.15em] leading-relaxed flex items-center gap-3">
+                      <Award size={20} /> Siswa akan menerima notifikasi skor segera setelah disimpan.
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Umpan Balik Guru (Feedback)</label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-5 top-5 text-slate-300" size={20} />
+                    <textarea 
+                      value={gradeModal.feedback || ''} 
+                      onChange={e => setGradeModal({...gradeModal, feedback: e.target.value})} 
+                      placeholder="Tuliskan catatan perbaikan atau apresiasi untuk siswa..." 
+                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-3xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner h-32 resize-none"
                     />
                   </div>
-                  <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-[0.15em] leading-relaxed flex items-center gap-3">
-                    <Award size={20} /> Siswa akan menerima notifikasi skor segera setelah disimpan.
-                  </div>
+                </div>
               </div>
             </div>
 

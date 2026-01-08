@@ -11,9 +11,10 @@ interface LoginProps {
   onBack: () => void;
   onLogin: (user: User) => void;
   onNavigateSignup: () => void;
+  logoUrl?: string;
 }
 
-const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup }) => {
+const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, logoUrl }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -179,11 +180,16 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup }
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Beranda
           </button>
           
-          <div className="mb-10 space-y-2">
-            <h3 className="text-5xl font-black text-slate-900 tracking-tighter">
-              {isAdmin ? 'Masuk Guru' : 'Masuk Siswa'}
-            </h3>
-            <p className="text-slate-500 font-bold italic">SMP Al Irsyad Surakarta</p>
+          <div className="mb-10 space-y-4">
+            {logoUrl && (
+              <img src={logoUrl} alt="Logo Sekolah" className="h-16 w-auto object-contain mb-4 animate-in zoom-in-50 duration-700" />
+            )}
+            <div className="space-y-1">
+              <h3 className="text-5xl font-black text-slate-900 tracking-tighter">
+                {isAdmin ? 'Masuk Guru' : 'Masuk Siswa'}
+              </h3>
+              <p className="text-slate-500 font-bold italic">SMP Al Irsyad Surakarta</p>
+            </div>
           </div>
 
           {error.message && (
