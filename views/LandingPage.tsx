@@ -22,7 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
           />
           <div className="hidden lg:block h-6 w-[1px] bg-slate-200 mx-1"></div>
           <h1 className="hidden sm:block text-lg font-black tracking-tight text-slate-800">
-            AL IRSYAD <span className="text-emerald-600">INFORMATIKA</span>
+            AL IRSYAD <span className="text-emerald-600">SURAKARTA</span>
           </h1>
         </div>
         <div className="flex items-center gap-4">

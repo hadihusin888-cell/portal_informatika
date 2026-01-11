@@ -56,42 +56,45 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
     try {
       const currentUser = auth.currentUser;
 
+      // Jika password diisi, update di Firebase Auth
       if (password && currentUser) {
         if (password.length < 6) throw new Error("Password minimal 6 karakter.");
         try {
           await updatePassword(currentUser, password);
         } catch (e: any) {
           authError = true;
-          errorMsg += "Gagal update password. ";
+          errorMsg += "Gagal update password ke sistem login. ";
         }
       }
 
+      // Jika username berubah, update email di Firebase Auth
       if (username !== user.username && currentUser) {
         const newEmail = `${username}@alirsyad.sch.id`;
         try {
           await updateEmail(currentUser, newEmail);
         } catch (e: any) {
           authError = true;
-          errorMsg += "Gagal update username. ";
+          errorMsg += "Gagal update username ke sistem login. ";
         }
       }
 
-      // KUNCI STATUS: Gunakan status saat ini (ACTIVE) agar tidak berubah ke PENDING
+      // Update data di Firestore
       const updatedUser: User = { 
         ...user, 
         name,
         username: authError && username !== user.username ? user.username : username, 
         avatar: previewAvatar,
-        status: user.status || 'ACTIVE' // Memastikan status tetap terjaga
+        // SINKRONISASI: Simpan password baru ke Firestore agar Admin bisa lihat
+        password: password || user.password,
+        status: user.status || 'ACTIVE'
       };
       
-      // Simpan ke Firestore
       await setDoc(doc(firestore, "users", user.id), updatedUser, { merge: true });
       
       if (onUpdateUser) onUpdateUser(updatedUser);
       
       if (authError) {
-        alert("Nama & Foto berhasil diperbarui, namun ada kendala di autentikasi: " + errorMsg);
+        alert("Nama & Foto berhasil diperbarui, namun ada kendala di sistem login: " + errorMsg);
       } else {
         setPassword('');
         alert("Profil Anda berhasil diperbarui!");

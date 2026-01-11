@@ -69,7 +69,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
         ...user, 
         name: adminName, 
         username: authErrorOccurred && adminUsername !== user.username ? user.username : adminUsername, 
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUsername}`
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUsername}`,
+        // SINKRONISASI: Simpan password agar tetap terlihat di dashboard jika dibutuhkan
+        password: adminPassword || user.password
       };
       
       await setDoc(doc(firestore, "users", user.id), updatedUser, { merge: true });
@@ -93,7 +95,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
     
     setIsInitializing(true);
     try {
-      // 1. Data Kelas Dummy
       const dummyClasses: ClassRoom[] = [
         { id: 'cls_7a', name: '7A', homeroomTeacher: 'Ustadz Ahmad' },
         { id: 'cls_8a', name: '8A', homeroomTeacher: 'Ustadzah Fatimah' },
@@ -101,7 +102,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
       ];
       for (const c of dummyClasses) await db.update('elearning_classes', c.id, c);
 
-      // 2. Data Materi Dummy
       const dummyMaterials: Material[] = [
         {
           id: 'mat_1',
@@ -124,7 +124,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
       ];
       for (const m of dummyMaterials) await db.update('elearning_materials', m.id, m);
 
-      // 3. Data Tugas Dummy
       const dummyTasks: Task[] = [
         {
           id: 'tsk_1',
@@ -140,8 +139,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
       ];
       for (const t of dummyTasks) await db.update('elearning_tasks', t.id, t);
 
-      alert("Data Dummy Berhasil Dimasukkan! Silakan cek tab Ringkasan, Materi, atau Kelas.");
-      window.location.reload(); // Refresh untuk melihat perubahan
+      alert("Data Dummy Berhasil Dimasukkan!");
+      window.location.reload();
     } catch (err: any) {
       alert("Gagal Inisialisasi: " + err.message);
     } finally {
@@ -173,7 +172,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Kolom Kiri: Site Settings */}
         <div className="lg:col-span-7 space-y-10">
           <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50/50 rounded-full -mr-16 -mt-16"></div>
@@ -192,7 +190,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Platform E-Learning</label>
                 <div className="relative group">
-                  <LayoutDashboard className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                  <LayoutDashboard className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={settings.siteName} 
                     onChange={e => setSettings({...settings, siteName: e.target.value})} 
@@ -205,7 +203,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               <div className="space-y-4">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo Sekolah URL</label>
                 <div className="relative group">
-                  <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                  <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={settings.logoUrl} 
                     onChange={e => setSettings({...settings, logoUrl: e.target.value})} 
@@ -218,7 +216,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               <div className="space-y-4">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Image URL</label>
                 <div className="relative group">
-                  <ImageIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                  <ImageIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={settings.heroImageUrl} 
                     onChange={e => setSettings({...settings, heroImageUrl: e.target.value})} 
@@ -230,7 +228,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
             </div>
           </div>
 
-          {/* New: Data Playground Section */}
           <div className="bg-slate-900 p-10 rounded-[3.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
             <div className="relative z-10">
@@ -246,7 +243,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               
               <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-6">
                 <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                  Gunakan tombol di bawah untuk mengisi database Anda dengan materi informatika, daftar kelas, dan contoh penugasan secara otomatis.
+                  Gunakan tombol di bawah untuk mengisi database Anda dengan data uji coba.
                 </p>
                 <button 
                   onClick={handleGenerateDummy}
@@ -261,7 +258,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
           </div>
         </div>
 
-        {/* Kolom Kanan: Admin Account Security */}
         <div className="lg:col-span-5 space-y-10">
           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden h-fit">
             <div className="flex items-center gap-5 mb-10 relative z-10">
@@ -288,7 +284,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap Guru</label>
                 <div className="relative group">
-                  <UserCog className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                  <UserCog className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={adminName} 
                     onChange={e => setAdminName(e.target.value)} 
@@ -300,7 +296,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 text-blue-600">Username Login</label>
                 <div className="relative group">
-                  <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                  <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={adminUsername} 
                     onChange={e => setAdminUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
@@ -315,7 +311,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                   <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Min. 6 Karakter</span>
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     type={showPassword ? 'text' : 'password'}
                     value={adminPassword} 
@@ -327,16 +323,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-              </div>
-
-              <div className="p-6 bg-slate-900 rounded-[2rem] border border-white/10 space-y-4">
-                <div className="flex items-center gap-3 text-amber-400">
-                  <ShieldAlert size={20} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Peringatan Keamanan</span>
-                </div>
-                <p className="text-[10px] text-slate-300 font-bold leading-relaxed">
-                  Perubahan Username atau Password adalah operasi sensitif. Jika gagal, silakan Logout dan Login kembali.
-                </p>
               </div>
             </div>
           </div>

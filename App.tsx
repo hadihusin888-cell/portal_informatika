@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LandingPage from './views/LandingPage';
 import AdminDashboard from './views/AdminDashboard';
 import StudentDashboard from './views/StudentDashboard';
@@ -19,7 +19,7 @@ import {
   query,
   where
 } from "firebase/firestore"; 
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut, Unsubscribe } from "firebase/auth";
 import { AlertCircle, Database, ShieldAlert, ExternalLink, X } from 'lucide-react';
 
 const sanitize = (obj: any) => {
@@ -130,6 +130,10 @@ export const db = {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'landing' | 'login' | 'signup' | 'dashboard'>('landing');
+  // Gunakan ref untuk melacak view saat ini di dalam callback async
+  const viewRef = useRef(view);
+  useEffect(() => { viewRef.current = view; }, [view]);
+
   const [loginRole, setLoginRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
@@ -141,55 +145,62 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          // Selalu ambil data terbaru dari Firestore untuk validasi status
-          const profile = await db.getSingle('users', firebaseUser.uid);
-          if (profile) {
-            const userData = profile as User;
+    let profileUnsubscribe: Unsubscribe | null = null;
+
+    const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // Bersihkan listener profil lama jika ada
+      if (profileUnsubscribe) {
+        profileUnsubscribe();
+        profileUnsubscribe = null;
+      }
+
+      if (firebaseUser) {
+        // PERBAIKAN: Gunakan onSnapshot untuk profil agar status selalu up-to-date dari server
+        profileUnsubscribe = onSnapshot(doc(firestore, "users", firebaseUser.uid), async (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = { id: docSnap.id, ...docSnap.data() } as User;
             
-            // Validasi: Hanya izinkan masuk dashboard jika status ACTIVE
+            // Logika Akses: Hanya izinkan ACTIVE masuk ke Dashboard
             if (userData.role === 'ADMIN' || (userData.role === 'STUDENT' && userData.status === 'ACTIVE')) {
               setUser(userData);
               setView('dashboard');
-            } else {
-              // Jika status masih PENDING, paksa logout dan kembalikan ke login
-              await auth.signOut();
-              setUser(null);
-              setView('login');
-              setLoginRole('STUDENT');
-              if (userData.status === 'PENDING') {
-                alert("Akun Anda sedang menunggu konfirmasi Guru.");
+            } else if (userData.role === 'STUDENT' && userData.status === 'PENDING') {
+              // Jika status PENDING, paksa logout kecuali jika user sedang di halaman signup
+              if (viewRef.current !== 'signup') {
+                await signOut(auth);
+                setUser(null);
+                setView('login');
+                setLoginRole('STUDENT');
+                alert("Akses Ditolak: Akun Anda sedang menunggu verifikasi Guru Informatika.");
               }
             }
+          } else {
+            // Jika dokumen user tidak ada (mungkin dihapus admin)
+            if (viewRef.current !== 'signup') {
+              setUser(null);
+              setView('landing');
+            }
           }
-        } else {
-          setUser(null);
-          if (view === 'dashboard') setView('landing');
-        }
-      } catch (e: any) {
-        console.error("Auth Listener Error:", e);
-      } finally {
+          setIsLoading(false);
+        }, (err) => {
+          console.error("Profile Snapshot Error:", err);
+          setIsLoading(false);
+        });
+      } else {
+        setUser(null);
+        if (viewRef.current === 'dashboard') setView('landing');
         setIsLoading(false);
       }
     });
 
-    const unsubSettings = onSnapshot(
-      doc(firestore, 'settings', 'site_configs'), 
-      (doc) => {
-        if (doc.exists()) {
-          setSettings(doc.data() as SiteSettings);
-        }
-      },
-      (error) => {
-        console.error("Settings Snapshot Error:", error);
-      }
-    );
+    const unsubSettings = onSnapshot(doc(firestore, 'settings', 'site_configs'), (doc) => {
+      if (doc.exists()) setSettings(doc.data() as SiteSettings);
+    });
 
     return () => {
-      unsubscribe();
+      authUnsubscribe();
       unsubSettings();
+      if (profileUnsubscribe) profileUnsubscribe();
     };
   }, []);
 
@@ -222,7 +233,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-black">
         <div className="w-16 h-16 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest text-center">Inisialisasi Database Cloud...</p>
+        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest text-center">Menghubungkan ke Cloud...</p>
       </div>
     );
   }
@@ -233,19 +244,10 @@ const App: React.FC = () => {
         <div className="fixed inset-x-0 top-0 z-[1000] bg-rose-600 text-white p-4 shadow-2xl animate-in slide-in-from-top duration-500">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-white/20 rounded-xl">
-                <ShieldAlert size={24} />
-              </div>
-              <div className="text-center md:text-left">
-                <p className="text-xs font-black uppercase tracking-widest">Akses Database Terbatas</p>
-                <p className="text-[10px] font-medium opacity-80">Beberapa data mungkin tidak dapat dimuat karena aturan keamanan Firestore.</p>
-              </div>
+              <ShieldAlert size={24} />
+              <p className="text-xs font-black uppercase tracking-widest">Akses Database Terbatas</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setDbError(false)} className="px-4 py-2 bg-white/20 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white/30 transition-colors">
-                Tutup
-              </button>
-            </div>
+            <button onClick={() => setDbError(false)} className="px-4 py-2 bg-white/20 text-white rounded-lg text-[10px] font-black uppercase">Tutup</button>
           </div>
         </div>
       )}
@@ -253,26 +255,19 @@ const App: React.FC = () => {
       <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3 rounded-full shadow-2xl border backdrop-blur-md transition-all duration-500 transform ${
         syncStatus === 'idle' ? 'translate-y-[-140%] opacity-0' : 'translate-y-0 opacity-100'
       } ${
-        syncStatus === 'syncing' ? 'bg-slate-900 text-white border-slate-700' : 
-        syncStatus === 'success' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-rose-600 text-white border-rose-500'
+        syncStatus === 'syncing' ? 'bg-slate-900 text-white' : 
+        syncStatus === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
       }`}>
-        <div className={`w-2 h-2 rounded-full ${syncStatus === 'syncing' ? 'bg-blue-400 animate-pulse' : 'bg-white'}`}></div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{syncStatus === 'syncing' ? 'Sinkronisasi' : syncStatus === 'success' ? 'Tersimpan' : 'Error'}</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{syncStatus === 'syncing' ? 'Menyimpan...' : syncStatus === 'success' ? 'Tersimpan' : 'Gagal'}</span>
       </div>
 
-      {view === 'landing' && (
-        <LandingPage 
-          onNavigateLogin={(role) => { setLoginRole(role); setView('login'); }} 
-          onNavigateSignup={() => setView('signup')} 
-          settings={settings} 
-        />
-      )}
+      {view === 'landing' && <LandingPage onNavigateLogin={(role) => { setLoginRole(role); setView('login'); }} onNavigateSignup={() => setView('signup')} settings={settings} />}
       {view === 'login' && <Login role={loginRole || 'STUDENT'} onBack={() => setView('landing')} onLogin={(u) => { setUser(u); setView('dashboard'); }} onNavigateSignup={() => setView('signup')} logoUrl={settings.logoUrl} />}
       {view === 'signup' && <Signup onBack={() => setView('login')} onSignup={() => { setLoginRole('STUDENT'); setView('login'); }} logoUrl={settings.logoUrl} />}
       {view === 'dashboard' && user && (
         user.role === 'ADMIN' 
-          ? <AdminDashboard user={user} onLogout={async () => { await auth.signOut(); setView('landing'); }} settings={settings} setSettings={setSettings} onUpdateUser={setUser} /> 
-          : <StudentDashboard user={user} onLogout={async () => { await auth.signOut(); setView('landing'); }} settings={settings} onUpdateUser={setUser} />
+          ? <AdminDashboard user={user} onLogout={() => signOut(auth)} settings={settings} setSettings={setSettings} onUpdateUser={setUser} /> 
+          : <StudentDashboard user={user} onLogout={() => signOut(auth)} settings={settings} onUpdateUser={setUser} />
       )}
     </div>
   );
