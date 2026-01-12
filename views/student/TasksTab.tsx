@@ -258,8 +258,8 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks, submissions, onRefresh
                     <h4 className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center gap-1.5">
                       <Info size={12} className="md:w-3.5 md:h-3.5" /> Instruksi Guru
                     </h4>
-                    <p className="text-[10px] md:text-xs text-slate-600 font-medium leading-relaxed italic bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-inner">
-                      "{selectedTask.description || 'Selesaikan tugas ini tepat waktu.'}"
+                    <p className="text-[10px] md:text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-inner">
+                      {selectedTask.description || 'Selesaikan tugas ini tepat waktu.'}
                     </p>
                   </div>
 
