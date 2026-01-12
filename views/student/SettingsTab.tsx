@@ -42,8 +42,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
     }
   };
 
-  const resetAvatar = () => {
-    setPreviewAvatar(`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`);
+  const randomizeAvatar = () => {
+    // Menghasilkan string acak untuk seed avatar baru
+    const randomSeed = Math.random().toString(36).substring(2, 10);
+    setPreviewAvatar(`https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`);
   };
 
   const handleUpdate = async () => {
@@ -119,8 +121,20 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
               alt="Avatar"
             />
             <div className="absolute bottom-2 right-2 flex gap-2">
-              <button onClick={() => fileInputRef.current?.click()} className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg border-4 border-white hover:scale-110 transition-all"><Camera size={20}/></button>
-              <button onClick={resetAvatar} className="p-3 bg-white text-rose-500 rounded-2xl shadow-lg border-4 border-white hover:bg-rose-50 transition-all"><RefreshCw size={20}/></button>
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg border-4 border-white hover:scale-110 transition-all"
+                title="Unggah Foto"
+              >
+                <Camera size={20}/>
+              </button>
+              <button 
+                onClick={randomizeAvatar} 
+                className="p-3 bg-white text-rose-500 rounded-2xl shadow-lg border-4 border-white hover:bg-rose-50 transition-all"
+                title="Acak Avatar"
+              >
+                <RefreshCw size={20}/>
+              </button>
             </div>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
           </div>

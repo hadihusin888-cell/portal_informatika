@@ -33,6 +33,25 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    
+    /* Optimize for very small screens */
+    @media (max-width: 480px) {
+      .mobile-compact-padding {
+        padding: 1rem !important;
+      }
+      .mobile-compact-rounded {
+        border-radius: 1.5rem !important;
+      }
+      .mobile-text-xs {
+        font-size: 0.75rem !important;
+      }
+      h2 {
+        font-size: 1.5rem !important;
+      }
+      h3 {
+        font-size: 1.25rem !important;
+      }
+    }
   </style>
 <script type="importmap">
 {

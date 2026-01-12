@@ -81,7 +81,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   const NotificationBadge = ({ count }: { count: number }) => (
     count > 0 ? (
-      <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-in zoom-in-50 duration-300">
+      <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-rose-500 text-white text-[8px] md:text-[9px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-in zoom-in-50 duration-300">
         {count > 9 ? '9+' : count}
       </span>
     ) : null
@@ -127,29 +127,29 @@ const Layout: React.FC<LayoutProps> = ({
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Navbar */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 md:px-10 flex items-center justify-between sticky top-0 z-40">
+        <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-10 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-black text-slate-900 tracking-tighter">
+            <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tighter truncate max-w-[150px] md:max-w-none">
               {sidebarItems.find(i => i.id === activeView)?.label || 'Dashboard'}
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <div className="relative" ref={notificationRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-3.5 rounded-2xl transition-all relative ${showNotifications ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400 hover:text-slate-900'}`}
+                className={`p-2.5 md:p-3.5 rounded-xl md:rounded-2xl transition-all relative ${showNotifications ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400 hover:text-slate-900'}`}
               >
-                <Bell size={22} />
+                <Bell size={18} className="md:w-5 md:h-5" />
                 <NotificationBadge count={unreadCount} />
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-4 w-80 md:w-[28rem] bg-white rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-white">
+                <div className="absolute right-0 mt-4 w-[280px] md:w-[28rem] bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="p-5 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white">
                     <div>
-                      <h4 className="font-black text-slate-900 text-lg tracking-tight">Pusat Notifikasi</h4>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kamu punya {unreadCount} pesan baru</p>
+                      <h4 className="font-black text-slate-900 text-base md:text-lg tracking-tight">Notifikasi</h4>
+                      <p className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kamu punya {unreadCount} pesan baru</p>
                     </div>
                     {unreadCount > 0 && (
                       <button 
@@ -157,19 +157,19 @@ const Layout: React.FC<LayoutProps> = ({
                           onMarkAllAsRead?.();
                           setShowNotifications(false);
                         }}
-                        className="text-[10px] font-black text-emerald-600 uppercase hover:bg-emerald-50 px-4 py-2 rounded-xl transition-all active:scale-95"
+                        className="text-[8px] md:text-[10px] font-black text-emerald-600 uppercase hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-all active:scale-95"
                       >
                         Tandai Semua
                       </button>
                     )}
                   </div>
-                  <div className="max-h-[450px] overflow-y-auto scrollbar-hide bg-white">
+                  <div className="max-h-[350px] md:max-h-[450px] overflow-y-auto scrollbar-hide bg-white">
                     {sortedNotifications.length === 0 ? (
-                      <div className="py-20 text-center">
-                        <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                           <Bell size={40} />
+                      <div className="py-12 md:py-20 text-center">
+                        <div className="w-16 h-16 bg-slate-50 text-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                           <Bell size={30} />
                         </div>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Belum ada aktivitas baru</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Belum ada aktivitas baru</p>
                       </div>
                     ) : (
                       sortedNotifications.map((notif) => (
@@ -179,40 +179,35 @@ const Layout: React.FC<LayoutProps> = ({
                             onMarkAsRead?.(notif.id);
                             if (!notif.read) setShowNotifications(false);
                           }}
-                          className={`p-6 flex gap-5 cursor-pointer transition-all border-b border-slate-50 last:border-0 ${!notif.read ? 'bg-emerald-50/30 hover:bg-emerald-50/50' : 'hover:bg-slate-50 opacity-60'}`}
+                          className={`p-4 md:p-6 flex gap-4 md:gap-5 cursor-pointer transition-all border-b border-slate-50 last:border-0 ${!notif.read ? 'bg-emerald-50/30 hover:bg-emerald-50/50' : 'hover:bg-slate-50 opacity-60'}`}
                         >
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${!notif.read ? 'bg-white' : 'bg-slate-100 grayscale'}`}>
+                          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${!notif.read ? 'bg-white' : 'bg-slate-100 grayscale'}`}>
                             {getIcon(notif.type)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-3 mb-1">
-                              <p className={`text-sm truncate ${!notif.read ? 'font-black text-slate-900' : 'font-bold text-slate-500'}`}>{notif.title}</p>
-                              <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest shrink-0">{notif.createdAt.split(',')[0]}</p>
+                            <div className="flex items-start justify-between gap-2 mb-0.5 md:mb-1">
+                              <p className={`text-xs md:text-sm truncate ${!notif.read ? 'font-black text-slate-900' : 'font-bold text-slate-500'}`}>{notif.title}</p>
+                              <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest shrink-0">{notif.createdAt.split(',')[0]}</p>
                             </div>
-                            <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">{notif.message}</p>
+                            <p className="text-[10px] md:text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">{notif.message}</p>
                           </div>
                           {!notif.read && (
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
                           )}
                         </div>
                       ))
                     )}
                   </div>
-                  {sortedNotifications.length > 0 && (
-                    <div className="p-5 bg-slate-50 text-center border-t border-slate-100">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tarik ke bawah untuk memuat lebih banyak</p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
 
-            <div className="h-10 w-[1px] bg-slate-100 mx-2"></div>
+            <div className="h-8 w-[1px] bg-slate-100 mx-1 md:mx-2"></div>
 
             <div className="relative" ref={profileRef}>
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className={`flex items-center gap-3 p-1.5 pr-5 rounded-full transition-all ${
+                className={`flex items-center gap-2 p-1 md:p-1.5 md:pr-5 rounded-full transition-all ${
                   showProfileMenu 
                     ? 'bg-slate-900 text-white shadow-2xl' 
                     : 'bg-slate-50 border border-slate-100 text-slate-800'
@@ -221,38 +216,38 @@ const Layout: React.FC<LayoutProps> = ({
                 <img 
                   src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
                   alt="Profile" 
-                  className={`w-9 h-9 rounded-full border-2 ${showProfileMenu ? 'border-white/20' : 'border-white'} bg-white object-cover`}
+                  className={`w-8 h-8 md:w-9 md:h-9 rounded-full border-2 ${showProfileMenu ? 'border-white/20' : 'border-white'} bg-white object-cover`}
                 />
                 <div className="text-left hidden sm:block">
                   <p className="text-xs font-black leading-none">{user.name.split(' ')[0]}</p>
                 </div>
-                <ChevronDown size={14} className={`transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown size={12} className={`transition-transform duration-300 hidden md:block ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-4 w-72 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="p-8 bg-slate-50 border-b border-slate-100 flex flex-col items-center text-center">
+                <div className="absolute right-0 mt-4 w-64 md:w-72 bg-white rounded-3xl md:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 flex flex-col items-center text-center">
                     <img 
                       src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
-                      className="w-20 h-20 rounded-full border-4 border-white shadow-xl mb-4"
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white shadow-xl mb-4"
                       alt=""
                     />
-                    <h5 className="text-base font-black text-slate-900">{user.name}</h5>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Informatika</p>
+                    <h5 className="text-sm md:text-base font-black text-slate-900">{user.name}</h5>
+                    <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Informatika</p>
                   </div>
                   
-                  <div className="p-3 space-y-1.5">
+                  <div className="p-2 md:p-3 space-y-1">
                     <button 
                       onClick={() => { setActiveView('settings'); setShowProfileMenu(false); }}
-                      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-widest"
+                      className="w-full flex items-center gap-3 md:gap-4 px-4 py-3 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-widest"
                     >
-                      <Settings size={20} className="text-slate-400" /> Profil Akun
+                      <Settings size={18} className="text-slate-400" /> Profil Akun
                     </button>
                     <button 
                       onClick={onLogout}
-                      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-xs font-black text-rose-500 hover:bg-rose-50 transition-colors uppercase tracking-widest"
+                      className="w-full flex items-center gap-3 md:gap-4 px-4 py-3 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black text-rose-500 hover:bg-rose-50 transition-colors uppercase tracking-widest"
                     >
-                      <LogOut size={20} /> Logout
+                      <LogOut size={18} /> Logout
                     </button>
                   </div>
                 </div>
@@ -262,39 +257,33 @@ const Layout: React.FC<LayoutProps> = ({
         </header>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-12">
+        <div className="flex-1 overflow-y-auto p-4 md:p-12 scrollbar-hide">
           {children}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-20 px-4 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[2.5rem]">
-        {sidebarItems.slice(0, 3).map((item) => (
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[1.5rem] md:rounded-t-[2.5rem]">
+        {/* Main navigation items (Home, Materials, Tasks, and Grades for Students) */}
+        {sidebarItems.slice(0, 4).map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveView(item.id)}
-            className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all ${
-              activeView === item.id ? 'bg-slate-900 text-white shadow-xl scale-110' : 'text-slate-400'
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+              activeView === item.id ? 'bg-slate-900 text-white shadow-lg scale-105' : 'text-slate-400'
             }`}
           >
-            <item.icon size={22} />
+            <item.icon size={20} />
           </button>
         ))}
-        {/* Mobile Notification Access */}
-        <button
-          onClick={() => setShowNotifications(true)}
-          className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl text-slate-400 relative`}
-        >
-          <Bell size={22} />
-          <NotificationBadge count={unreadCount} />
-        </button>
+        {/* Settings button is always at the end on mobile nav */}
         <button
           onClick={() => setActiveView('settings')}
-          className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all ${
-            activeView === 'settings' ? 'bg-slate-900 text-white shadow-xl scale-110' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+            activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg scale-105' : 'text-slate-400'
           }`}
         >
-          <UserIcon size={22} />
+          <UserIcon size={20} />
         </button>
       </nav>
     </div>
