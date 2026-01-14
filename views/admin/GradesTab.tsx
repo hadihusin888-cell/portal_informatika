@@ -1,6 +1,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, History, Clock, ClipboardCheck, Search, Filter, ClipboardList, ExternalLink, GraduationCap, X, Eye, Award, Star, MessageCircle, Save, MessageSquare } from 'lucide-react';
+import { 
+  Loader2, History, Clock, ClipboardCheck, Search, Filter, 
+  ClipboardList, ExternalLink, GraduationCap, X, Eye, 
+  Award, Star, MessageCircle, Save, MessageSquare, Printer
+} from 'lucide-react';
 import { db } from '../../App.tsx';
 import { Submission, Task, User, ClassRoom } from '../../types.ts';
 import { notifyStudents } from '../../utils/helpers.ts';
@@ -61,6 +65,74 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
     pending: filteredSubs.filter(s => s.grade === undefined || s.grade === null).length
   }), [filteredSubs]);
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const classTitle = classFilter ? `Kelas ${classFilter}` : 'Semua Kelas';
+    const taskTitle = taskFilter ? tasks.find(t => t.id === taskFilter)?.title : 'Semua Tugas';
+
+    let tableRows = '';
+    filteredSubs.forEach(s => {
+      const student = allUsers.find(st => st.id === s.studentId);
+      const task = tasks.find(t => t.id === s.taskId);
+      tableRows += `
+        <tr>
+          <td>${student?.name || 'N/A'}</td>
+          <td>${task?.title || 'N/A'} (Kelas ${student?.classId || 'N/A'})</td>
+          <td style="text-align: center; font-weight: bold;">${s.grade !== undefined && s.grade !== null ? s.grade : '--'}</td>
+        </tr>
+      `;
+    });
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Rekap Nilai Informatika - SMP AL Irsyad Surakarta</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+            body { font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; color: #1e293b; }
+            .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+            h1 { margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; color: #0f172a; }
+            h2 { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; }
+            td { border: 1px solid #e2e8f0; padding: 12px; font-size: 12px; color: #334155; }
+            .footer { margin-top: 50px; text-align: right; font-size: 10px; color: #94a3b8; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Rekap Nilai Informatika</h1>
+            <h2>SMP AL Irsyad Surakarta</h2>
+            <p style="font-size: 12px; margin-top: 10px; font-weight: 700;">Filter: ${classTitle} | ${taskTitle}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40%;">Nama Lengkap</th>
+                <th style="width: 45%;">Tugas & Kelas</th>
+                <th style="width: 15%; text-align: center;">Skor</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows || '<tr><td colspan="3" style="text-align: center;">Tidak ada data yang ditampilkan</td></tr>'}
+            </tbody>
+          </table>
+          <div class="footer">
+            Dicetak secara otomatis melalui Portal E-Learning pada: ${new Date().toLocaleString('id-ID')}
+          </div>
+          <script>
+            window.onload = function() { window.print(); window.close(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   const handleGrade = async () => {
     if (gradeModal.grade === undefined || gradeModal.grade === "" || gradeModal.grade < 0 || gradeModal.grade > 100) {
       alert("Masukkan nilai yang valid (0-100)");
@@ -110,28 +182,54 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
       </div>
 
       <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-            <input 
-              type="text" 
-              placeholder="Cari nama siswa atau judul tugas..." 
-              value={search} 
-              onChange={e => setSearch(e.target.value)} 
-              className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-inner" 
-            />
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1 relative group w-full">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Pencarian Cepat</label>
+            <div className="relative">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
+              <input 
+                type="text" 
+                placeholder="Cari nama siswa atau judul tugas..." 
+                value={search} 
+                onChange={e => setSearch(e.target.value)} 
+                className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-inner" 
+              />
+            </div>
           </div>
           <div className="w-full md:w-64 relative group">
-            <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-            <select 
-              value={classFilter} 
-              onChange={e => setClassFilter(e.target.value)} 
-              className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
-            >
-              <option value="">Semua Kelas</option>
-              {classes.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
-            </select>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Kelas</label>
+            <div className="relative">
+              <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
+              <select 
+                value={classFilter} 
+                onChange={e => setClassFilter(e.target.value)} 
+                className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
+              >
+                <option value="">Semua Kelas</option>
+                {classes.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
+              </select>
+            </div>
           </div>
+          <div className="w-full md:w-64 relative group">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Tugas</label>
+            <div className="relative">
+              <ClipboardList className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
+              <select 
+                value={taskFilter} 
+                onChange={e => setTaskFilter(e.target.value)} 
+                className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
+              >
+                <option value="">Semua Tugas</option>
+                {tasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select>
+            </div>
+          </div>
+          <button 
+            onClick={handlePrint}
+            className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-600 active:scale-95 transition-all"
+          >
+            <Printer size={20} /> Cetak Rekap
+          </button>
         </div>
       </section>
 

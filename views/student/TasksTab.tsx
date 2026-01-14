@@ -64,13 +64,32 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks, submissions, onRefresh
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
     let embedUrl = url;
+    
+    // YouTube
     if (url.includes('youtube.com/watch?v=')) {
       embedUrl = url.replace('watch?v=', 'embed/');
     } else if (url.includes('youtu.be/')) {
       embedUrl = 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1];
-    } else if (url.includes('docs.google.com')) {
+    }
+    // Google Docs
+    else if (url.includes('docs.google.com')) {
       embedUrl = url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`;
     }
+    // Canva
+    else if (url.includes('canva.com/design/')) {
+      const baseUrl = url.split('?')[0];
+      if (baseUrl.includes('/view')) {
+        embedUrl = `${baseUrl}?embed`;
+      } else {
+        const match = baseUrl.match(/design\/([^\/]+)\//);
+        if (match && match[1]) {
+           embedUrl = `https://www.canva.com/design/${match[1]}/view?embed`;
+        } else {
+           embedUrl = `${baseUrl}/view?embed`;
+        }
+      }
+    }
+    
     return embedUrl;
   };
 
@@ -248,6 +267,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks, submissions, onRefresh
                       allowFullScreen 
                       title="Task Content"
                       loading="lazy"
+                      allow="fullscreen"
                     ></iframe>
                   </div>
                 </div>

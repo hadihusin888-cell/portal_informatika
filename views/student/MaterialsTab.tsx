@@ -48,6 +48,22 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials }) => {
     else if (url.includes('docs.google.com')) {
       embedUrl = url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`;
     }
+    // Canva
+    else if (url.includes('canva.com/design/')) {
+      const baseUrl = url.split('?')[0]; // Ambil URL dasar tanpa utm_content dll
+      // Cek apakah sudah ada /view di akhir, jika belum tambahkan
+      if (baseUrl.includes('/view')) {
+        embedUrl = `${baseUrl}?embed`;
+      } else {
+        // Menangani format link canva yang berbeda-apa
+        const match = baseUrl.match(/design\/([^\/]+)\//);
+        if (match && match[1]) {
+           embedUrl = `https://www.canva.com/design/${match[1]}/view?embed`;
+        } else {
+           embedUrl = `${baseUrl}/view?embed`;
+        }
+      }
+    }
     
     return embedUrl;
   };
@@ -160,6 +176,7 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials }) => {
                         allowFullScreen 
                         title="Material Content"
                         loading="lazy"
+                        allow="fullscreen"
                       ></iframe>
                    </div>
                 </div>
