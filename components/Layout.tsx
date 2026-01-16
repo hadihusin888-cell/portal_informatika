@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   LogOut, User as UserIcon, Bell, X, Check, 
   Info, BookOpen, ClipboardList, CheckCircle, 
-  UserPlus, ChevronDown, Settings, UserCircle 
+  UserPlus, ChevronDown, Settings, UserCircle,
+  Users, BarChart3
 } from 'lucide-react';
 
 interface Notification {
@@ -49,11 +50,10 @@ const Layout: React.FC<LayoutProps> = ({
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       
-      // Ensure that if parsing fails (NaN), we don't break the sort
       const valA = isNaN(timeA) ? 0 : timeA;
       const valB = isNaN(timeB) ? 0 : timeB;
       
-      return valB - valA; // Descending: Newest (largest timestamp) first
+      return valB - valA;
     });
   }, [notifications]);
 
@@ -104,6 +104,21 @@ const Layout: React.FC<LayoutProps> = ({
       </span>
     ) : null
   );
+
+  // Filter items specifically for mobile bottom navigation to keep it clean but functional
+  const mobileNavItems = useMemo(() => {
+    if (user.role === 'ADMIN') {
+      // For Admin: Overview, Confirmations, Materials, Tasks, Students
+      return sidebarItems.filter(item => 
+        ['overview', 'confirmations', 'materials', 'tasks', 'students'].includes(item.id)
+      );
+    } else {
+      // For Student: Home, Materials, Tasks, Grades
+      return sidebarItems.filter(item => 
+        ['home', 'materials', 'tasks', 'grades'].includes(item.id)
+      );
+    }
+  }, [user.role, sidebarItems]);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -280,28 +295,27 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[1.5rem] md:rounded-t-[2.5rem]">
-        {/* Main navigation items (Home, Materials, Tasks, and Grades for Students) */}
-        {sidebarItems.slice(0, 4).map((item) => (
+      {/* Mobile Bottom Navigation - Optimized with dynamic items based on role */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[1.5rem]">
+        {mobileNavItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveView(item.id)}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-              activeView === item.id ? 'bg-slate-900 text-white shadow-lg scale-105' : 'text-slate-400'
+            className={`flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all ${
+              activeView === item.id ? 'bg-slate-900 text-white shadow-lg scale-110 -translate-y-1' : 'text-slate-400'
             }`}
           >
             <item.icon size={20} />
           </button>
         ))}
-        {/* Settings button is always at the end on mobile nav */}
+        {/* Settings button is always at the end on mobile nav for quick access */}
         <button
           onClick={() => setActiveView('settings')}
-          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-            activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg scale-105' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all ${
+            activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg scale-110 -translate-y-1' : 'text-slate-400'
           }`}
         >
-          <UserIcon size={20} />
+          <Settings size={20} />
         </button>
       </nav>
     </div>

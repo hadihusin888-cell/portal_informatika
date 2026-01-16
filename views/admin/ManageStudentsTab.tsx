@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, UserPlus2, Search, Edit, 
@@ -39,6 +38,13 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
     password: '',
     status: 'ACTIVE'
   });
+
+  // Urutkan kelas dari terkecil ke terbesar secara alfanumerik (7, 8, 9, 10...)
+  const sortedClasses = useMemo(() => {
+    return [...classes].sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    );
+  }, [classes]);
 
   useEffect(() => {
     setLoading(true);
@@ -199,7 +205,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-blue-500/10 transition-all cursor-pointer shadow-inner"
              >
                <option value="">Semua Kelas</option>
-               {classes.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
+               {sortedClasses.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
              </select>
           </div>
         </div>
@@ -333,7 +339,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                       className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-blue-500 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer"
                     >
                       <option value="">Pilih Kelas Siswa</option>
-                      {classes.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
+                      {sortedClasses.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
                     </select>
                   </div>
                 </div>
