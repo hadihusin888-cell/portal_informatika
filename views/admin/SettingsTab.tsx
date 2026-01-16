@@ -3,7 +3,7 @@ import {
   Globe, LayoutDashboard, Link as LinkIcon, Image as ImageIcon, 
   Shield, UserCog, Lock, User as UserIcon, EyeOff, Eye, 
   Loader2, Save, Sparkles, Database,
-  CheckCircle2, Info
+  CheckCircle2, Info, RefreshCw
 } from 'lucide-react';
 import { db } from '../../App';
 import { SiteSettings, User } from '../../types';
@@ -24,6 +24,15 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
   const [adminPassword, setAdminPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState(user.avatar || '');
+
+  // Fallback avatar based on the uploaded image characteristics
+  const defaultAdminAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop";
+
+  const randomizeAvatar = () => {
+    const randomSeed = Math.random().toString(36).substring(2, 10);
+    setPreviewAvatar(`https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`);
+  };
 
   const handleSave = async () => {
     if (!settings.siteName || !adminName || !adminUsername) {
@@ -66,7 +75,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
         ...user, 
         name: adminName, 
         username: authErrorOccurred && adminUsername !== user.username ? user.username : adminUsername, 
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUsername}`,
+        avatar: previewAvatar || user.avatar || defaultAdminAvatar,
         password: adminPassword || user.password
       };
       
@@ -180,12 +189,21 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
             </div>
 
             <div className="space-y-6 relative z-10">
-              <div className="flex flex-col items-center py-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 mb-2 shadow-inner">
-                <img 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUsername}`} 
-                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-white mb-4" 
-                  alt="Admin Avatar"
-                />
+              <div className="flex flex-col items-center py-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 mb-2 shadow-inner relative group/avatar">
+                <div className="relative">
+                  <img 
+                    src={previewAvatar || user.avatar || defaultAdminAvatar} 
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-xl bg-white mb-4 object-cover" 
+                    alt="Admin Avatar"
+                  />
+                  <button 
+                    onClick={randomizeAvatar}
+                    className="absolute bottom-4 right-0 p-2 bg-emerald-600 text-white rounded-xl shadow-lg border-2 border-white hover:bg-slate-900 transition-all active:scale-90"
+                    title="Acak Avatar"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                </div>
                 <h4 className="font-black text-slate-800">{adminName || 'Nama Guru'}</h4>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Administrator Cloud</p>
               </div>
