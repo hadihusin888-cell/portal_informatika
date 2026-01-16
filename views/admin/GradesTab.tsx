@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, History, Clock, ClipboardCheck, Search, Filter, 
   ClipboardList, ExternalLink, GraduationCap, X, Eye, 
-  Award, Star, MessageCircle, Save, MessageSquare, Printer
+  Award, Star, MessageCircle, Save, MessageSquare, Printer,
+  ChevronDown, ArrowDown
 } from 'lucide-react';
 import { db } from '../../App.tsx';
 import { Submission, Task, User, ClassRoom } from '../../types.ts';
@@ -23,6 +23,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [taskFilter, setTaskFilter] = useState('');
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   useEffect(() => {
     const fetch = async () => {
@@ -45,8 +46,18 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
     fetch();
   }, []);
 
+  const sortedClasses = useMemo(() => {
+    return [...classes].sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    );
+  }, [classes]);
+
   const filteredSubs = useMemo(() => {
-    return subs.filter(s => {
+    // Urutkan berdasarkan ID secara descending (terbaru di atas) 
+    // karena ID menggunakan sub_${Date.now()}
+    const sorted = [...subs].sort((a, b) => b.id.localeCompare(a.id));
+
+    return sorted.filter(s => {
       const student = allUsers.find(st => st.id === s.studentId);
       const task = tasks.find(t => t.id === s.taskId);
       
@@ -58,6 +69,10 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
       return matchSearch && matchClass && matchTask;
     });
   }, [subs, allUsers, tasks, search, classFilter, taskFilter]);
+
+  const displayedSubs = useMemo(() => {
+    return filteredSubs.slice(0, displayLimit);
+  }, [filteredSubs, displayLimit]);
 
   const stats = useMemo(() => ({
     total: filteredSubs.length,
@@ -191,7 +206,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
                 type="text" 
                 placeholder="Cari nama siswa atau judul tugas..." 
                 value={search} 
-                onChange={e => setSearch(e.target.value)} 
+                onChange={e => { setSearch(e.target.value); setDisplayLimit(10); }} 
                 className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-inner" 
               />
             </div>
@@ -202,11 +217,11 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
               <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
               <select 
                 value={classFilter} 
-                onChange={e => setClassFilter(e.target.value)} 
+                onChange={e => { setClassFilter(e.target.value); setDisplayLimit(10); }} 
                 className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
               >
                 <option value="">Semua Kelas</option>
-                {classes.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
+                {sortedClasses.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
               </select>
             </div>
           </div>
@@ -216,7 +231,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
               <ClipboardList className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
               <select 
                 value={taskFilter} 
-                onChange={e => setTaskFilter(e.target.value)} 
+                onChange={e => { setTaskFilter(e.target.value); setDisplayLimit(10); }} 
                 className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
               >
                 <option value="">Semua Tugas</option>
@@ -233,7 +248,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
         </div>
       </section>
 
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 uppercase text-[10px] font-black text-slate-400 tracking-[0.2em]">
@@ -246,7 +261,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredSubs.map(s => {
+              {displayedSubs.map(s => {
                 const student = allUsers.find(st => st.id === s.studentId);
                 const task = tasks.find(t => t.id === s.taskId);
                 const isGraded = s.grade !== undefined && s.grade !== null;
@@ -298,6 +313,28 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Read More Button */}
+        {filteredSubs.length > displayLimit && (
+          <div className="p-8 border-t border-slate-50 bg-slate-50/30 flex justify-center">
+             <button 
+               onClick={() => setDisplayLimit(prev => prev + 10)}
+               className="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 shadow-sm transition-all flex items-center gap-3 active:scale-95"
+             >
+               Tampilkan Lebih Banyak <ChevronDown size={16} />
+             </button>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {filteredSubs.length === 0 && (
+          <div className="py-24 text-center flex flex-col items-center justify-center">
+             <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-3xl flex items-center justify-center mb-6">
+                <ClipboardList size={40} />
+             </div>
+             <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Tidak ada data pengumpulan tugas</p>
+          </div>
+        )}
       </div>
 
       {gradeModal && (

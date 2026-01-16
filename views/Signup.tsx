@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { User, ClassRoom } from '../types';
@@ -30,7 +29,14 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
       try {
         const q = query(collection(firestore, 'elearning_classes'));
         const snap = await getDocs(q);
-        setClasses(snap.docs.map(d => ({ id: d.id, ...d.data() } as ClassRoom)));
+        const classList = snap.docs.map(d => ({ id: d.id, ...d.data() } as ClassRoom));
+        
+        // Mengurutkan kelas berdasarkan nama secara alfanumerik (7, 8, 9, dst)
+        const sortedClasses = classList.sort((a, b) => 
+          a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        
+        setClasses(sortedClasses);
       } catch (e) {
         console.error("Error fetching classes:", e);
       }
