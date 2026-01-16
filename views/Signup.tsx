@@ -89,7 +89,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
         role: 'STUDENT',
         status: 'PENDING',
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`,
-        createdAt: new Date().toLocaleString('id-ID'),
+        createdAt: new Date().toISOString(),
         password: password
       };
 

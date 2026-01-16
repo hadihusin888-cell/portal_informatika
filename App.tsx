@@ -140,7 +140,7 @@ const App: React.FC = () => {
   const [dbError, setDbError] = useState<boolean>(false);
   const [settings, setSettings] = useState<SiteSettings>({
     logoUrl: 'https://www.alirsyad.or.id/wp-content/uploads/download/alirsyad-alislamiyyah.png',
-    heroImageUrl: 'https://i.ibb.co.com/1Jnssz8Y/Snap-Insta-to-617031149-18380135788159432-1154661347935631024-n.jpg',
+    heroImageUrl: 'https://media.vitecoelearning.eu/vitecoelearning.eu/wp-content/uploads/2023/09/e-learning-1-fb-EN.jpg',
     siteName: 'Informatika SMP Al Irsyad Surakarta'
   });
 

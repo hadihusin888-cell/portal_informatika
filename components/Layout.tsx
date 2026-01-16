@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   LogOut, User as UserIcon, Bell, X, Check, 
@@ -46,7 +45,16 @@ const Layout: React.FC<LayoutProps> = ({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
   const sortedNotifications = useMemo(() => {
-    return [...notifications].sort((a, b) => b.id.localeCompare(a.id));
+    return [...notifications].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      
+      // Ensure that if parsing fails (NaN), we don't break the sort
+      const valA = isNaN(timeA) ? 0 : timeA;
+      const valB = isNaN(timeB) ? 0 : timeB;
+      
+      return valB - valA; // Descending: Newest (largest timestamp) first
+    });
   }, [notifications]);
 
   const unreadCount = useMemo(() => {
@@ -76,6 +84,16 @@ const Layout: React.FC<LayoutProps> = ({
       case 'grade': return <CheckCircle size={16} className="text-blue-500" />;
       case 'registration': return <UserPlus size={16} className="text-orange-500" />;
       default: return <Info size={16} className="text-slate-400" />;
+    }
+  };
+
+  const formatDateLabel = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return isoString.split(',')[0];
+      return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    } catch (e) {
+      return isoString.split(',')[0];
     }
   };
 
@@ -187,7 +205,7 @@ const Layout: React.FC<LayoutProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-0.5 md:mb-1">
                               <p className={`text-xs md:text-sm truncate ${!notif.read ? 'font-black text-slate-900' : 'font-bold text-slate-500'}`}>{notif.title}</p>
-                              <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest shrink-0">{notif.createdAt.split(',')[0]}</p>
+                              <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest shrink-0">{formatDateLabel(notif.createdAt)}</p>
                             </div>
                             <p className="text-[10px] md:text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">{notif.message}</p>
                           </div>

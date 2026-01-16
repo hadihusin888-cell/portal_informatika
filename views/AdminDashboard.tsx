@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { BarChart3, BookOpen, ClipboardList, Users, School, Settings, UserPlus, CheckCircle, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout.tsx';
 import { User, SiteSettings, ClassRoom } from '../types.ts';
 import { db } from '../App.tsx';
+import { firestore } from '../firebase';
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 import OverviewTab from './admin/OverviewTab.tsx';
 import ConfirmRegistrationsTab from './admin/ConfirmRegistrationsTab.tsx';
@@ -41,35 +42,43 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
   });
 
   useEffect(() => {
-    const fetchNotifs = async () => {
-      const stored = await db.getByQuery('elearning_notifications', 'userId', user.id);
-      setNotifications(Array.isArray(stored) ? stored : []);
-    };
+    // 1. Real-time Notifications Listener
+    const qNotifs = query(
+      collection(firestore, 'elearning_notifications'), 
+      where('userId', '==', user.id)
+    );
+    
+    const unsubscribeNotifs = onSnapshot(qNotifs, (snapshot) => {
+      const notifList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNotifications(notifList);
+    });
 
+    // 2. Fetch Classes
     const fetchClasses = async () => {
       const c = await db.get('elearning_classes');
       setClasses(Array.isArray(c) ? c : []);
     };
-
-    fetchNotifs();
     fetchClasses();
     
-    const interval = setInterval(fetchNotifs, 30000);
-    return () => clearInterval(interval);
-  }, [user.id, activeView]);
+    return () => {
+      unsubscribeNotifs();
+    };
+  }, [user.id]);
 
   const handleMarkAsRead = async (id: string) => {
     const notif = notifications.find(n => n.id === id);
     if (notif) {
       await db.update('elearning_notifications', id, { ...notif, read: true });
-      setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+      // Notifications will be updated automatically via onSnapshot listener
     }
   };
 
   const handleMarkAllRead = async () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updated);
-    await db.saveAll('elearning_notifications', updated);
+    const updated = notifications.filter(n => !n.read).map(n => ({ ...n, read: true }));
+    if (updated.length > 0) {
+      await db.saveAll('elearning_notifications', updated);
+      // Notifications will be updated automatically via onSnapshot listener
+    }
   };
 
   const sidebarItems = [

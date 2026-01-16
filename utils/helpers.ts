@@ -1,4 +1,3 @@
-
 import { db } from '../App.tsx';
 import { Notification, User } from '../types.ts';
 
@@ -29,7 +28,7 @@ export const notifyStudents = async (
         message,
         type,
         read: false,
-        createdAt: new Date().toLocaleString('id-ID')
+        createdAt: new Date().toISOString()
       };
       await db.add('elearning_notifications', newNotif);
     }
@@ -49,7 +48,7 @@ export const notifyAdmins = async (title: string, message: string) => {
         message,
         type: 'registration',
         read: false,
-        createdAt: new Date().toLocaleString('id-ID')
+        createdAt: new Date().toISOString()
       };
       await db.add('elearning_notifications', newNotif);
     }

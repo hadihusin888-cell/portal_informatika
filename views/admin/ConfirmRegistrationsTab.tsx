@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, UserCheck, UserX, Search, Users, 
@@ -41,10 +40,16 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
   }, []);
 
   const filteredPending = useMemo(() => {
-    return pending.filter(s => 
-      (s.name || '').toLowerCase().includes(search.toLowerCase()) || 
-      (s.username || '').toLowerCase().includes(search.toLowerCase())
-    );
+    return [...pending]
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
+      .filter(s => 
+        (s.name || '').toLowerCase().includes(search.toLowerCase()) || 
+        (s.username || '').toLowerCase().includes(search.toLowerCase())
+      );
   }, [pending, search]);
 
   const handleApprove = async (student: User) => {
@@ -53,7 +58,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
       // Ubah status menjadi ACTIVE. Listener di ManageStudentsTab akan menangkap ini.
       await db.update('users', student.id, { 
         status: 'ACTIVE',
-        activatedAt: new Date().toLocaleString('id-ID')
+        activatedAt: new Date().toISOString()
       });
       
       await notifyStudents([], "Akun Aktif!", "Selamat, pendaftaran Anda telah disetujui Guru Informatika. Silakan login.", "registration", student.id);
