@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BookOpen, Users, Clock, ArrowRight, ShieldCheck, GraduationCap, Zap, Layers, Globe, Star, Cpu } from 'lucide-react';
 import { Role, SiteSettings } from '../types';
@@ -30,13 +29,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
             onClick={() => onNavigateLogin('STUDENT')}
             className="text-slate-500 font-bold px-4 py-2 hover:text-emerald-600 transition-colors text-sm"
           >
-            Siswa
+            Masuk Siswa
           </button>
           <button 
             onClick={() => onNavigateLogin('ADMIN')}
             className="hidden md:block text-slate-500 font-bold px-4 py-2 hover:text-emerald-600 transition-colors text-sm"
           >
-            Guru
+            Masuk Guru
           </button>
           <button 
             onClick={onNavigateSignup}

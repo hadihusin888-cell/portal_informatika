@@ -3,7 +3,7 @@ import {
   Loader2, History, Clock, ClipboardCheck, Search, Filter, 
   ClipboardList, ExternalLink, GraduationCap, X, Eye, 
   Award, Star, MessageCircle, Save, MessageSquare, Printer,
-  ChevronDown, ArrowDown
+  ChevronDown, ArrowDown, Trash2, RotateCcw, CheckSquare, Square
 } from 'lucide-react';
 import { db } from '../../App.tsx';
 import { Submission, Task, User, ClassRoom } from '../../types.ts';
@@ -24,6 +24,9 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
   const [classFilter, setClassFilter] = useState('');
   const [taskFilter, setTaskFilter] = useState('');
   const [displayLimit, setDisplayLimit] = useState(10);
+  
+  // State untuk checkbox
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetch = async () => {
@@ -53,11 +56,8 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
   }, [classes]);
 
   const filteredSubs = useMemo(() => {
-    // Urutkan berdasarkan ID secara descending (terbaru di atas) 
-    // karena ID menggunakan sub_${Date.now()}
-    const sorted = [...subs].sort((a, b) => b.id.localeCompare(a.id));
-
-    return sorted.filter(s => {
+    // Pertama, filter data berdasarkan input pencarian dan dropdown filter
+    const filtered = subs.filter(s => {
       const student = allUsers.find(st => st.id === s.studentId);
       const task = tasks.find(t => t.id === s.taskId);
       
@@ -67,6 +67,28 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
       const matchTask = !taskFilter || s.taskId === taskFilter;
       
       return matchSearch && matchClass && matchTask;
+    });
+
+    // Kedua, urutkan data secara alfabetis: Kelas > Nama Siswa > ID (Waktu)
+    return filtered.sort((a, b) => {
+      const studentA = allUsers.find(st => st.id === a.studentId);
+      const studentB = allUsers.find(st => st.id === b.studentId);
+      
+      const classNameA = studentA?.classId || '';
+      const classNameB = studentB?.classId || '';
+      
+      // Urutan berdasarkan Kelas (7A, 7B, 8A...)
+      const classCompare = classNameA.localeCompare(classNameB, undefined, { numeric: true, sensitivity: 'base' });
+      if (classCompare !== 0) return classCompare;
+      
+      // Jika kelas sama, urutkan berdasarkan Nama Siswa
+      const nameA = studentA?.name || '';
+      const nameB = studentB?.name || '';
+      const nameCompare = nameA.localeCompare(nameB);
+      if (nameCompare !== 0) return nameCompare;
+      
+      // Jika nama sama, urutkan berdasarkan ID (Terbaru ke Terlama)
+      return b.id.localeCompare(a.id);
     });
   }, [subs, allUsers, tasks, search, classFilter, taskFilter]);
 
@@ -79,6 +101,49 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
     graded: filteredSubs.filter(s => s.grade !== undefined && s.grade !== null).length,
     pending: filteredSubs.filter(s => s.grade === undefined || s.grade === null).length
   }), [filteredSubs]);
+
+  // Handler Checkbox
+  const toggleSelectAll = () => {
+    if (selectedIds.size === displayedSubs.length) {
+      setSelectedIds(new Set());
+    } else {
+      const newSelected = new Set(displayedSubs.map(s => s.id));
+      setSelectedIds(newSelected);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+
+    triggerConfirm(
+      `Reset Status Tugas?`,
+      `Anda memilih ${selectedIds.size} data. Menghapus data ini akan mengembalikan tombol 'Kerjakan' pada dashboard siswa sehingga mereka dapat mengirim ulang tugas. Tindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        try {
+          const idsArray = Array.from(selectedIds);
+          // Explicitly type 'id' to fix 'unknown' inference error (fixes line 113 error)
+          await Promise.all(idsArray.map((id: string) => db.delete('elearning_submissions', id)));
+          
+          setSubs(prev => prev.filter(s => !selectedIds.has(s.id)));
+          setSelectedIds(new Set());
+          alert(`Berhasil meriset ${idsArray.length} status pengumpulan tugas.`);
+        } catch (err) {
+          alert("Gagal menghapus beberapa data. Silakan coba lagi.");
+        }
+      },
+      'danger'
+    );
+  };
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -206,18 +271,18 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
                 type="text" 
                 placeholder="Cari nama siswa atau judul tugas..." 
                 value={search} 
-                onChange={e => { setSearch(e.target.value); setDisplayLimit(10); }} 
+                onChange={e => { setSearch(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
                 className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-inner" 
               />
             </div>
           </div>
-          <div className="w-full md:w-64 relative group">
+          <div className="w-full md:w-48 relative group">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Kelas</label>
             <div className="relative">
               <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
               <select 
                 value={classFilter} 
-                onChange={e => { setClassFilter(e.target.value); setDisplayLimit(10); }} 
+                onChange={e => { setClassFilter(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
                 className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
               >
                 <option value="">Semua Kelas</option>
@@ -225,13 +290,13 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
               </select>
             </div>
           </div>
-          <div className="w-full md:w-64 relative group">
+          <div className="w-full md:w-48 relative group">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Tugas</label>
             <div className="relative">
               <ClipboardList className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
               <select 
                 value={taskFilter} 
-                onChange={e => { setTaskFilter(e.target.value); setDisplayLimit(10); }} 
+                onChange={e => { setTaskFilter(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
                 className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
               >
                 <option value="">Semua Tugas</option>
@@ -239,12 +304,22 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
               </select>
             </div>
           </div>
-          <button 
-            onClick={handlePrint}
-            className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-600 active:scale-95 transition-all"
-          >
-            <Printer size={20} /> Cetak Rekap
-          </button>
+          <div className="flex gap-2 w-full md:w-auto">
+            <button 
+              onClick={handlePrint}
+              className="flex-1 md:flex-none px-6 py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 transition-all"
+            >
+              <Printer size={18} /> Rekap
+            </button>
+            {selectedIds.size > 0 && (
+              <button 
+                onClick={handleBulkDelete}
+                className="flex-1 md:flex-none px-6 py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-rose-100 animate-in slide-in-from-right-4 duration-300 hover:bg-slate-900 transition-all"
+              >
+                <RotateCcw size={18} /> Reset ({selectedIds.size})
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
@@ -253,7 +328,16 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 uppercase text-[10px] font-black text-slate-400 tracking-[0.2em]">
               <tr>
-                <th className="px-10 py-6">Siswa</th>
+                <th className="px-10 py-6 w-12">
+                   <button onClick={toggleSelectAll} className="p-1 hover:bg-slate-100 rounded-md transition-colors">
+                     {selectedIds.size === displayedSubs.length && displayedSubs.length > 0 ? (
+                       <CheckSquare size={20} className="text-indigo-600" />
+                     ) : (
+                       <Square size={20} className="text-slate-300" />
+                     )}
+                   </button>
+                </th>
+                <th className="px-4 py-6">Siswa</th>
                 <th className="px-10 py-6">Tugas & Kelas</th>
                 <th className="px-10 py-6">Status</th>
                 <th className="px-10 py-6 text-center">Skor</th>
@@ -265,17 +349,28 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
                 const student = allUsers.find(st => st.id === s.studentId);
                 const task = tasks.find(t => t.id === s.taskId);
                 const isGraded = s.grade !== undefined && s.grade !== null;
+                const isSelected = selectedIds.has(s.id);
+
                 return (
-                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <tr key={s.id} className={`transition-colors group ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-slate-50/50'}`}>
                     <td className="px-10 py-6">
+                       <button onClick={() => toggleSelect(s.id)} className="p-1 hover:bg-white rounded-md transition-colors shadow-none">
+                         {isSelected ? (
+                           <CheckSquare size={20} className="text-indigo-600" />
+                         ) : (
+                           <Square size={20} className="text-slate-200 group-hover:text-slate-400" />
+                         )}
+                       </button>
+                    </td>
+                    <td className="px-4 py-6">
                       <div className="flex items-center gap-4">
                         <img 
                           src={student?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student?.username}`} 
                           className="w-10 h-10 rounded-full border-4 border-white bg-slate-50 shadow-sm" 
                           alt="" 
                         />
-                        <div>
-                          <p className="font-black text-slate-800 text-sm">{student?.name || 'User Dihapus'}</p>
+                        <div className="min-w-0">
+                          <p className="font-black text-slate-800 text-sm truncate">{student?.name || 'User Dihapus'}</p>
                           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">@{student?.username || 'unknown'}</p>
                         </div>
                       </div>
