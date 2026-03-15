@@ -25,13 +25,14 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout, set
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State untuk menyimpan filter mapel yang dipicu dari klik kartu di HomeTab
+  const [selectedSubjectFilter, setSelectedSubjectFilter] = useState('all');
 
   const fetchData = useCallback(async () => {
     if (!user.id) return;
     
     try {
-      // Siswa hanya boleh menggunakan db.get pada koleksi yang sifatnya publik/terbuka (materi & tugas)
-      // Untuk koleksi yang diproteksi per-user (submissions & notifications), WAJIB gunakan getByQuery
       const [storedMaterials, storedTasks, storedSubmissions, storedNotifs] = await Promise.all([
         db.get('elearning_materials'),
         db.get('elearning_tasks'),
@@ -55,6 +56,15 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout, set
     const interval = setInterval(fetchData, 30000); 
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  // Fungsi wrapper untuk navigasi dari Sidebar
+  const handleSidebarNavigate = (view: string) => {
+    // Jika navigasi lewat sidebar ke Materi Belajar, reset filter ke 'all'
+    if (view === 'materials') {
+      setSelectedSubjectFilter('all');
+    }
+    setActiveView(view);
+  };
 
   const handleMarkAsRead = async (id: string) => {
     const notif = notifications.find(n => n.id === id);
@@ -90,9 +100,16 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout, set
   const renderContent = () => {
     switch (activeView) {
       case 'home': 
-        return <HomeTab user={user} materials={studentMaterials} tasks={studentTasks} submissions={studentSubmissions} setActiveView={setActiveView} />;
+        return <HomeTab 
+          user={user} 
+          materials={studentMaterials} 
+          tasks={studentTasks} 
+          submissions={studentSubmissions} 
+          setActiveView={setActiveView} 
+          setSelectedSubjectFilter={setSelectedSubjectFilter}
+        />;
       case 'materials': 
-        return <MaterialsTab materials={studentMaterials} />;
+        return <MaterialsTab materials={studentMaterials} initialSubject={selectedSubjectFilter} />;
       case 'tasks': 
         return <TasksTab user={user} tasks={studentTasks} submissions={studentSubmissions} onRefresh={fetchData} />;
       case 'grades': 
@@ -116,7 +133,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout, set
         { id: 'settings', label: 'Pengaturan', icon: Settings },
       ]} 
       activeView={activeView} 
-      setActiveView={setActiveView}
+      setActiveView={handleSidebarNavigate}
       logoUrl={settings.logoUrl}
       siteName={settings.siteName}
       notifications={notifications}

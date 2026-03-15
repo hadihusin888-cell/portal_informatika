@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, UserPlus2, Search, Edit, 
@@ -17,9 +18,10 @@ import { User, ClassRoom } from '../../types.ts';
 interface ManageStudentsTabProps {
   triggerConfirm: any;
   classes: ClassRoom[];
+  currentUser: User;
 }
 
-const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, classes }) => {
+const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, classes, currentUser }) => {
   const [students, setStudents] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,6 +32,8 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
   const [showModal, setShowModal] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
   
+  const isSuperAdmin = currentUser.username === 'admin';
+
   const [form, setForm] = useState<Partial<User>>({ 
     name: '', 
     username: '', 
@@ -86,6 +90,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
   };
 
   const handleSave = async () => {
+    if (!isSuperAdmin) return;
     if (!form.name || !form.username || !form.classId) {
       alert("Mohon lengkapi Nama Lengkap, Username, dan Pilihan Kelas.");
       return;
@@ -116,6 +121,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
   };
 
   const handleResetPassword = async () => {
+    if (!isSuperAdmin) return;
     if (!form.id || !form.username) return;
     
     const studentEmail = `${form.username}@alirsyad.sch.id`;
@@ -144,6 +150,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
   };
 
   const handleDelete = (id: string, name: string) => {
+    if (!isSuperAdmin) return;
     triggerConfirm(
       `Hapus Profil Siswa?`, 
       `Semua data Cloud untuk "${name}" akan dihapus permanen.`, 
@@ -167,10 +174,10 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
   return (
     <div className="space-y-8 text-black animate-in fade-in duration-500 pb-24">
       {/* Header & Filter Panel */}
-      <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-8 relative overflow-hidden">
+      <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8 relative overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center shadow-inner">
+            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
               <GraduationCap size={32} />
             </div>
             <div>
@@ -178,12 +185,14 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
               <p className="text-slate-500 font-medium text-sm mt-1">Mengelola {students.length} profil akademik cloud aktif.</p>
             </div>
           </div>
-          <button 
-            onClick={() => { setForm({ name: '', username: '', classId: '', avatar: '', password: '', status: 'ACTIVE' }); setShowModal(true); setShowFormPassword(false); }} 
-            className="group px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-slate-900 transition-all active:scale-95"
-          >
-            <UserPlus2 size={20} /> Tambah Siswa Baru
-          </button>
+          {isSuperAdmin && (
+            <button 
+              onClick={() => { setForm({ name: '', username: '', classId: '', avatar: '', password: '', status: 'ACTIVE' }); setShowModal(true); setShowFormPassword(false); }} 
+              className="group px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-slate-900 transition-all active:scale-95"
+            >
+              <UserPlus2 size={20} /> Tambah Siswa Baru
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
@@ -215,16 +224,18 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
       {filteredStudents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredStudents.map(s => (
-            <div key={s.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center text-center relative group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all z-10">
-                <button onClick={() => { setForm(s); setShowModal(true); setShowFormPassword(false); }} className="p-3 bg-white text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-lg border border-slate-50"><Edit size={16}/></button>
-                <button onClick={() => handleDelete(s.id, s.name)} className="p-3 bg-white text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-lg border border-slate-50"><Trash2 size={16}/></button>
-              </div>
+            <div key={s.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center relative group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
+              {isSuperAdmin && (
+                <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all z-10">
+                  <button onClick={() => { setForm(s); setShowModal(true); setShowFormPassword(false); }} className="p-3 bg-white text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-lg border border-slate-50"><Edit size={16}/></button>
+                  <button onClick={() => handleDelete(s.id, s.name)} className="p-3 bg-white text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-lg border border-slate-50"><Trash2 size={16}/></button>
+                </div>
+              )}
               
               <div className="relative mb-6">
                 <img 
                   src={s.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.username}`} 
-                  className="w-24 h-24 rounded-[2.5rem] border-4 border-white bg-slate-50 shadow-xl object-cover group-hover:scale-105 transition-transform duration-500" 
+                  className="w-24 h-24 rounded-2xl border-4 border-white bg-slate-50 shadow-xl object-cover group-hover:scale-105 transition-transform duration-500" 
                   alt={s.name} 
                 />
                 <div className="absolute -bottom-1 -right-1 bg-emerald-500 p-2 rounded-full border-4 border-white shadow-lg">
@@ -262,7 +273,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
+        <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6">
             <SearchX size={40} />
           </div>
@@ -272,9 +283,9 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
       )}
 
       {/* Modal Tambah/Edit */}
-      {showModal && (
+      {showModal && isSuperAdmin && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white">
                <div className="flex items-center gap-5">
@@ -293,7 +304,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-10 scrollbar-hide">
-              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
+              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
                 <img 
                   src={form.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username || 'default'}`} 
                   className="w-24 h-24 rounded-full border-4 border-white shadow-xl bg-white mb-4" 
@@ -308,7 +319,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                   <div className="relative group">
                     <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                     <input 
-                      value={form.name} 
+                      value={form.name || ''} 
                       onChange={e => setForm({...form, name: e.target.value})} 
                       placeholder="Nama lengkap..." 
                       className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
@@ -321,7 +332,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                   <div className="relative group">
                     <Fingerprint className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                     <input 
-                      value={form.username} 
+                      value={form.username || ''} 
                       onChange={e => setForm({...form, username: e.target.value.toLowerCase().replace(/\s/g, '')})} 
                       placeholder="Username..." 
                       className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
@@ -334,7 +345,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                   <div className="relative group">
                     <School className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                     <select 
-                      value={form.classId} 
+                      value={form.classId || ''} 
                       onChange={e => setForm({...form, classId: e.target.value})}
                       className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-blue-500 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer"
                     >
@@ -382,7 +393,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
               {/* Reset Password Action Area */}
               {form.id && (
                 <div className="pt-6 border-t border-slate-100">
-                  <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4 text-center md:text-left">
                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm shrink-0">
                         <Key size={24} />

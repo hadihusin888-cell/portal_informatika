@@ -52,7 +52,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
     return classes.filter(c => 
       c.name.toLowerCase().includes(search.toLowerCase()) || 
       (c.homeroomTeacher || '').toLowerCase().includes(search.toLowerCase())
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    ).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
   }, [classes, search]);
 
   const handleSave = async () => {
@@ -103,10 +103,10 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
   return (
     <div className="space-y-8 text-black animate-in fade-in duration-500 pb-24">
       {/* Header & Stats Panel */}
-      <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
+      <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-[1.5rem] flex items-center justify-center shadow-inner">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center shadow-inner">
               <School size={32} />
             </div>
             <div>
@@ -160,7 +160,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
       {filteredClasses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredClasses.map(c => (
-            <div key={c.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm text-center relative group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col items-center">
+            <div key={c.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center relative group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col items-center">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-full -mr-12 -mt-12 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               
               <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 z-10">
@@ -168,7 +168,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
                 <button onClick={() => handleDelete(c.id, c.name)} className="p-3 bg-white text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-lg border border-slate-50"><Trash2 size={16}/></button>
               </div>
               
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-50 to-orange-100 text-amber-600 rounded-[2rem] flex items-center justify-center mb-6 shadow-inner group-hover:rotate-6 transition-transform duration-500">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-50 to-orange-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:rotate-6 transition-transform duration-500">
                 <School size={36} />
               </div>
               
@@ -192,7 +192,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
+        <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6">
             <SearchX size={40} />
           </div>
@@ -204,10 +204,10 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-amber-500 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-amber-100">
+                  <div className="w-14 h-14 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-100">
                     <Layers size={28} />
                   </div>
                   <div>
@@ -227,10 +227,10 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
                   <div className="relative group">
                     <Bookmark className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                     <input 
-                      value={form.name} 
+                      value={form.name || ''} 
                       onChange={e => setForm({...form, name: e.target.value.toUpperCase().replace(/\s/g, '')})} 
                       placeholder="Contoh: 8A, 9F, DLL"
-                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-[1.8rem] font-black text-slate-800 outline-none focus:bg-white focus:border-amber-500 transition-all shadow-inner" 
+                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-2xl font-black text-slate-800 outline-none focus:bg-white focus:border-amber-500 transition-all shadow-inner" 
                     />
                   </div>
                 </div>
@@ -240,16 +240,16 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
                   <div className="relative group">
                     <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                     <input 
-                      value={form.homeroomTeacher} 
+                      value={form.homeroomTeacher || ''} 
                       onChange={e => setForm({...form, homeroomTeacher: e.target.value})} 
                       placeholder="Masukkan nama lengkap guru..."
-                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-[1.8rem] font-bold text-slate-800 outline-none focus:bg-white focus:border-amber-500 transition-all shadow-inner" 
+                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-800 outline-none focus:bg-white focus:border-amber-500 transition-all shadow-inner" 
                     />
                   </div>
                 </div>
               </div>
               
-              <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
+              <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
                  <Info size={18} className="text-amber-500 shrink-0 mt-0.5" />
                  <p className="text-[11px] text-amber-700 font-bold leading-relaxed italic">
                    Gunakan penamaan kelas yang standar untuk memudahkan sinkronisasi dengan database pendaftaran siswa. Kode kelas bersifat unik.

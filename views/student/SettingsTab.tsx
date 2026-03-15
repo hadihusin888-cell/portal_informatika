@@ -162,16 +162,16 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all" />
+                <input value={name || ''} onChange={e => setName(e.target.value)} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Username (Login ID)</label>
-                <input value={username} onChange={e => setUsername(e.target.value.toLowerCase())} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all" />
+                <input value={username || ''} onChange={e => setUsername(e.target.value.toLowerCase())} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Ganti Password (Opsional)</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full p-5 pr-14 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all" />
+                  <input type={showPassword ? 'text' : 'password'} value={password || ''} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full p-5 pr-14 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all" />
                   <button onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
                 </div>
               </div>

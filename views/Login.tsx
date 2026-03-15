@@ -117,7 +117,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       <div className={`hidden md:flex flex-1 items-center justify-center p-20 relative overflow-hidden ${isAdmin ? 'bg-slate-900' : 'bg-blue-600'}`}>
         <div className="relative z-10 text-white max-w-md space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
-          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl ${isAdmin ? 'bg-emerald-500' : 'bg-white text-blue-600'}`}>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl ${isAdmin ? 'bg-emerald-500' : 'bg-white text-blue-600'}`}>
              {isAdmin ? <ShieldCheck size={40} /> : <GraduationCap size={40} />}
           </div>
           <div className="space-y-4">
@@ -148,7 +148,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
           </div>
 
           {error.message && (
-            <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-3xl animate-in fade-in slide-in-from-top-2 text-rose-600 font-black text-xs uppercase flex items-center gap-3">
+            <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl animate-in fade-in slide-in-from-top-2 text-rose-600 font-black text-xs uppercase flex items-center gap-3">
               <AlertCircle size={20} /> {error.message}
             </div>
           )}
@@ -164,7 +164,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Username</label>
               <div className="relative group">
                 <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-[1.8rem] outline-none font-black text-slate-800 focus:border-blue-500/30" required />
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-black text-slate-800 focus:border-blue-500/30" required />
               </div>
             </div>
 
@@ -174,14 +174,14 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
               </div>
               <div className="relative group">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-14 pr-14 py-5 bg-slate-50 border-2 border-slate-50 rounded-[1.8rem] font-bold text-slate-800 focus:border-blue-500/30" required />
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-14 pr-14 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold text-slate-800 focus:border-blue-500/30" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                 </button>
               </div>
             </div>
 
-            <button disabled={loading} className={`w-full py-6 rounded-[1.8rem] font-black text-lg shadow-2xl transition-all active:scale-[0.98] ${isAdmin ? 'bg-slate-900 text-white' : 'bg-blue-600 text-white'}`}>
+            <button disabled={loading} className={`w-full py-6 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-[0.98] ${isAdmin ? 'bg-slate-900 text-white' : 'bg-blue-600 text-white'}`}>
               {loading ? <RefreshCw className="animate-spin" size={26} /> : 'Login Sekarang'}
             </button>
             

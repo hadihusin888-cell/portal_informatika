@@ -122,37 +122,39 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar Desktop */}
-      <aside className="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col sticky top-0 h-screen">
-        <div className="p-8 flex flex-col gap-4">
-          <img src={logoUrl} alt="Logo" className="h-14 w-auto object-contain self-start" />
-          <span className="font-black text-slate-800 text-[10px] leading-tight opacity-40 uppercase tracking-[0.3em]">{siteName}</span>
+      {/* Sidebar Desktop - Minimalist Rail Sidebar */}
+      <aside className="w-20 hover:w-72 bg-white border-r border-slate-200 hidden md:flex flex-col sticky top-0 h-screen transition-all duration-300 group z-50 overflow-hidden">
+        <div className="p-6 flex flex-col gap-4 overflow-hidden">
+          <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain self-start transition-all duration-300 group-hover:h-14" />
+          <span className="font-black text-slate-800 text-[10px] leading-tight opacity-0 group-hover:opacity-40 uppercase tracking-[0.3em] transition-opacity duration-300 whitespace-nowrap">{siteName}</span>
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-2">
+        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-hide">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveView(item.id)}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeView === item.id 
-                  ? 'bg-slate-900 text-white shadow-2xl shadow-slate-200 translate-x-1' 
+                  ? 'bg-slate-900 text-white shadow-2xl shadow-slate-200' 
                   : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
               }`}
             >
-              <item.icon size={20} />
-              {item.label}
+              <item.icon size={22} className="shrink-0" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>
 
-        <div className="p-6 border-t border-slate-50">
-          <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100/50">
-             <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-               Status Sistem
-             </p>
-             <span className="text-[11px] font-bold text-slate-700">Cloud Terhubung</span>
+        <div className="p-4 border-t border-slate-50 overflow-hidden">
+          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50 flex items-center gap-4">
+             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0"></div>
+             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+               <div className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Status</div>
+               <span className="text-[11px] font-bold text-slate-700">Terhubung</span>
+             </div>
           </div>
         </div>
       </aside>
@@ -178,11 +180,11 @@ const Layout: React.FC<LayoutProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-4 w-[280px] md:w-[28rem] bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="p-5 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white">
+                <div className="absolute right-0 mt-4 w-[280px] md:w-96 bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="p-5 md:p-6 border-b border-slate-50 flex items-center justify-between bg-white">
                     <div>
-                      <h4 className="font-black text-slate-900 text-base md:text-lg tracking-tight">Notifikasi</h4>
-                      <p className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kamu punya {unreadCount} pesan baru</p>
+                      <h4 className="font-black text-slate-900 text-sm md:text-base tracking-tight">Notifikasi</h4>
+                      <p className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kamu punya {unreadCount} pesan baru</p>
                     </div>
                     {unreadCount > 0 && (
                       <button 
@@ -258,15 +260,15 @@ const Layout: React.FC<LayoutProps> = ({
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-4 w-64 md:w-72 bg-white rounded-3xl md:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 flex flex-col items-center text-center">
+                <div className="absolute right-0 mt-4 w-60 md:w-64 bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="p-6 md:p-7 bg-slate-50 border-b border-slate-100 flex flex-col items-center text-center">
                     <img 
                       src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white shadow-xl mb-4"
+                      className="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-white shadow-xl mb-3"
                       alt=""
                     />
-                    <h5 className="text-sm md:text-base font-black text-slate-900">{user.name}</h5>
-                    <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Informatika</p>
+                    <h5 className="text-xs md:text-sm font-black text-slate-900">{user.name}</h5>
+                    <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Informatika</p>
                   </div>
                   
                   <div className="p-2 md:p-3 space-y-1">
@@ -296,7 +298,7 @@ const Layout: React.FC<LayoutProps> = ({
       </main>
 
       {/* Mobile Bottom Navigation - Optimized with dynamic items based on role */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[1.5rem]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-2xl">
         {mobileNavItems.map((item) => (
           <button
             key={item.id}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, History, Clock, ClipboardCheck, Search, Filter, 
@@ -12,9 +13,10 @@ import { notifyStudents } from '../../utils/helpers.ts';
 interface GradesTabProps {
   triggerConfirm: any;
   classes: ClassRoom[];
+  currentUser: User;
 }
 
-const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
+const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentUser }) => {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -23,10 +25,15 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [taskFilter, setTaskFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'graded'>('all');
   const [displayLimit, setDisplayLimit] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   
-  // State untuk checkbox
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, classFilter, taskFilter, statusFilter]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -37,8 +44,22 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
           db.get('elearning_tasks'), 
           db.get('users')
         ]);
-        setSubs(Array.isArray(s) ? s : []);
-        setTasks(Array.isArray(t) ? t : []);
+        
+        const allTasks = (Array.isArray(t) ? t : []) as Task[];
+        const allSubs = (Array.isArray(s) ? s : []) as Submission[];
+        
+        // Filter Tugas: Jika bukan super admin, hanya ambil tugas dari mapel guru ini
+        const relevantTasks = currentUser.username === 'admin' 
+          ? allTasks 
+          : allTasks.filter(task => task.authorId === currentUser.id);
+        
+        const relevantTaskIds = new Set(relevantTasks.map(t => t.id));
+        
+        // Filter Submissions: Hanya ambil pengumpulan yang berkaitan dengan tugas di atas
+        const relevantSubs = allSubs.filter(sub => relevantTaskIds.has(sub.taskId));
+
+        setTasks(relevantTasks);
+        setSubs(relevantSubs);
         setAllUsers(Array.isArray(u) ? u : []);
       } catch (err) {
         console.error(err);
@@ -47,7 +68,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
       }
     };
     fetch();
-  }, []);
+  }, [currentUser]);
 
   const sortedClasses = useMemo(() => {
     return [...classes].sort((a, b) => 
@@ -55,8 +76,7 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
     );
   }, [classes]);
 
-  const filteredSubs = useMemo(() => {
-    // Pertama, filter data berdasarkan input pencarian dan dropdown filter
+  const baseFilteredSubs = useMemo(() => {
     const filtered = subs.filter(s => {
       const student = allUsers.find(st => st.id === s.studentId);
       const task = tasks.find(t => t.id === s.taskId);
@@ -69,277 +89,167 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
       return matchSearch && matchClass && matchTask;
     });
 
-    // Kedua, urutkan data secara alfabetis: Kelas > Nama Siswa > ID (Waktu)
     return filtered.sort((a, b) => {
       const studentA = allUsers.find(st => st.id === a.studentId);
       const studentB = allUsers.find(st => st.id === b.studentId);
-      
       const classNameA = studentA?.classId || '';
       const classNameB = studentB?.classId || '';
-      
-      // Urutan berdasarkan Kelas (7A, 7B, 8A...)
       const classCompare = classNameA.localeCompare(classNameB, undefined, { numeric: true, sensitivity: 'base' });
       if (classCompare !== 0) return classCompare;
-      
-      // Jika kelas sama, urutkan berdasarkan Nama Siswa
       const nameA = studentA?.name || '';
       const nameB = studentB?.name || '';
-      const nameCompare = nameA.localeCompare(nameB);
-      if (nameCompare !== 0) return nameCompare;
-      
-      // Jika nama sama, urutkan berdasarkan ID (Terbaru ke Terlama)
-      return b.id.localeCompare(a.id);
+      return nameA.localeCompare(nameB);
     });
   }, [subs, allUsers, tasks, search, classFilter, taskFilter]);
 
+  const filteredSubs = useMemo(() => {
+    if (statusFilter === 'all') return baseFilteredSubs;
+    return baseFilteredSubs.filter(s => {
+      const isGraded = s.grade !== undefined && s.grade !== null;
+      return statusFilter === 'graded' ? isGraded : !isGraded;
+    });
+  }, [baseFilteredSubs, statusFilter]);
+
   const displayedSubs = useMemo(() => {
-    return filteredSubs.slice(0, displayLimit);
-  }, [filteredSubs, displayLimit]);
+    const start = (currentPage - 1) * displayLimit;
+    return filteredSubs.slice(start, start + displayLimit);
+  }, [filteredSubs, currentPage, displayLimit]);
+
+  const totalPages = Math.ceil(filteredSubs.length / displayLimit);
 
   const stats = useMemo(() => ({
-    total: filteredSubs.length,
-    graded: filteredSubs.filter(s => s.grade !== undefined && s.grade !== null).length,
-    pending: filteredSubs.filter(s => s.grade === undefined || s.grade === null).length
-  }), [filteredSubs]);
+    total: baseFilteredSubs.length,
+    graded: baseFilteredSubs.filter(s => s.grade !== undefined && s.grade !== null).length,
+    pending: baseFilteredSubs.filter(s => s.grade === undefined || s.grade === null).length
+  }), [baseFilteredSubs]);
 
-  // Handler Checkbox
   const toggleSelectAll = () => {
     if (selectedIds.size === displayedSubs.length) {
       setSelectedIds(new Set());
     } else {
-      const newSelected = new Set(displayedSubs.map(s => s.id));
-      setSelectedIds(newSelected);
+      setSelectedIds(new Set(displayedSubs.map(s => s.id)));
     }
   };
 
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
     setSelectedIds(newSelected);
   };
 
   const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
-
     triggerConfirm(
       `Reset Status Tugas?`,
-      `Anda memilih ${selectedIds.size} data. Menghapus data ini akan mengembalikan tombol 'Kerjakan' pada dashboard siswa sehingga mereka dapat mengirim ulang tugas. Tindakan ini tidak dapat dibatalkan.`,
+      `Menghapus ${selectedIds.size} data pengumpulan akan mengizinkan siswa mengirim ulang tugas.`,
       async () => {
         try {
           const idsArray = Array.from(selectedIds);
-          // Explicitly type 'id' to fix 'unknown' inference error (fixes line 113 error)
           await Promise.all(idsArray.map((id: string) => db.delete('elearning_submissions', id)));
-          
           setSubs(prev => prev.filter(s => !selectedIds.has(s.id)));
           setSelectedIds(new Set());
-          alert(`Berhasil meriset ${idsArray.length} status pengumpulan tugas.`);
-        } catch (err) {
-          alert("Gagal menghapus beberapa data. Silakan coba lagi.");
-        }
-      },
-      'danger'
+        } catch (err) { alert("Gagal menghapus."); }
+      }
     );
   };
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
-
-    const classTitle = classFilter ? `Kelas ${classFilter}` : 'Semua Kelas';
-    const taskTitle = taskFilter ? tasks.find(t => t.id === taskFilter)?.title : 'Semua Tugas';
-
     let tableRows = '';
     filteredSubs.forEach(s => {
       const student = allUsers.find(st => st.id === s.studentId);
       const task = tasks.find(t => t.id === s.taskId);
-      tableRows += `
-        <tr>
-          <td>${student?.name || 'N/A'}</td>
-          <td>${task?.title || 'N/A'} (Kelas ${student?.classId || 'N/A'})</td>
-          <td style="text-align: center; font-weight: bold;">${s.grade !== undefined && s.grade !== null ? s.grade : '--'}</td>
-        </tr>
-      `;
+      tableRows += `<tr><td>${student?.name || 'N/A'}</td><td>${task?.title || 'N/A'} (Kelas ${student?.classId || 'N/A'})</td><td style="text-align:center;">${s.grade ?? '--'}</td></tr>`;
     });
-
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Rekap Nilai Informatika - SMP AL Irsyad Surakarta</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-            body { font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; color: #1e293b; }
-            .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
-            h1 { margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; color: #0f172a; }
-            h2 { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; }
-            td { border: 1px solid #e2e8f0; padding: 12px; font-size: 12px; color: #334155; }
-            .footer { margin-top: 50px; text-align: right; font-size: 10px; color: #94a3b8; font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Rekap Nilai Informatika</h1>
-            <h2>SMP AL Irsyad Surakarta</h2>
-            <p style="font-size: 12px; margin-top: 10px; font-weight: 700;">Filter: ${classTitle} | ${taskTitle}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 40%;">Nama Lengkap</th>
-                <th style="width: 45%;">Tugas & Kelas</th>
-                <th style="width: 15%; text-align: center;">Skor</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows || '<tr><td colspan="3" style="text-align: center;">Tidak ada data yang ditampilkan</td></tr>'}
-            </tbody>
-          </table>
-          <div class="footer">
-            Dicetak secara otomatis melalui Portal E-Learning pada: ${new Date().toLocaleString('id-ID')}
-          </div>
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
+    printWindow.document.write(`<html><body><h1>Rekap Nilai ${currentUser.subject}</h1><table><thead><tr><th>Nama</th><th>Tugas</th><th>Skor</th></tr></thead><tbody>${tableRows}</tbody></table></body><script>window.onload=function(){window.print();window.close();}</script></html>`);
     printWindow.document.close();
   };
 
   const handleGrade = async () => {
-    if (gradeModal.grade === undefined || gradeModal.grade === "" || gradeModal.grade < 0 || gradeModal.grade > 100) {
-      alert("Masukkan nilai yang valid (0-100)");
-      return;
-    }
-    
+    if (gradeModal.grade === "" || gradeModal.grade < 0 || gradeModal.grade > 100) { alert("Nilai tidak valid."); return; }
     try {
-      const updatedSubmission = { 
-        ...gradeModal, 
-        grade: Number(gradeModal.grade),
-        feedback: gradeModal.feedback || '' 
-      };
-      await db.update('elearning_submissions', gradeModal.id, updatedSubmission);
-      setSubs(subs.map(s => s.id === gradeModal.id ? updatedSubmission : s));
-      
-      notifyStudents([], "Tugas Telah Dinilai!", `Tugas Anda telah dinilai dengan skor ${gradeModal.grade}.`, "grade", gradeModal.studentId);
-      alert("Nilai dan umpan balik berhasil disimpan!");
+      const updated = { ...gradeModal, grade: Number(gradeModal.grade), feedback: gradeModal.feedback || '' };
+      await db.update('elearning_submissions', gradeModal.id, updated);
+      setSubs(subs.map(s => s.id === gradeModal.id ? updated : s));
+      notifyStudents([], "Tugas Dinilai!", `Skor: ${gradeModal.grade}`, "grade", gradeModal.studentId);
       setGradeModal(null);
-    } catch (err) {
-      alert("Gagal menyimpan nilai.");
+    } catch (err) { alert("Gagal."); }
+  };
+
+  const handleNextStudent = () => {
+    const currentIndex = filteredSubs.findIndex(s => s.id === gradeModal.id);
+    if (currentIndex < filteredSubs.length - 1) {
+      setGradeModal(filteredSubs[currentIndex + 1]);
     }
   };
 
-  if (loading) return (
-    <div className="py-32 flex flex-col items-center justify-center gap-4 text-black">
-      <Loader2 className="animate-spin text-indigo-600" size={48} />
-      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Sinkronisasi Nilai Cloud...</p>
-    </div>
-  );
+  const handlePrevStudent = () => {
+    const currentIndex = filteredSubs.findIndex(s => s.id === gradeModal.id);
+    if (currentIndex > 0) {
+      setGradeModal(filteredSubs[currentIndex - 1]);
+    }
+  };
+
+  if (loading) return <div className="py-32 flex flex-col items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={48} /></div>;
 
   return (
-    <div className="space-y-8 text-black animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 text-black pb-20">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Pekerjaan Masuk', val: stats.total, icon: History, col: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Menunggu Nilai', val: stats.pending, icon: Clock, col: 'text-orange-600', bg: 'bg-orange-50' },
-          { label: 'Selesai Dinilai', val: stats.graded, icon: ClipboardCheck, col: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { id: 'all', label: 'Tugas Masuk', val: stats.total, icon: History, col: 'text-blue-600', bg: 'bg-blue-50' },
+          { id: 'pending', label: 'Perlu Dinilai', val: stats.pending, icon: Clock, col: 'text-orange-600', bg: 'bg-orange-50' },
+          { id: 'graded', label: 'Selesai', val: stats.graded, icon: ClipboardCheck, col: 'text-emerald-600', bg: 'bg-emerald-50' },
         ].map((s, i) => (
-          <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-6">
-            <div className={`${s.bg} ${s.col} w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner`}><s.icon size={28}/></div>
-            <div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none mb-1">{s.label}</p>
-              <h4 className="text-3xl font-black text-slate-800 tracking-tighter">{s.val}</h4>
+          <button 
+            key={i} 
+            onClick={() => setStatusFilter(s.id as any)}
+            className={`p-8 rounded-[2.5rem] border transition-all flex items-center gap-6 text-left ${
+              statusFilter === s.id 
+                ? 'bg-slate-900 border-slate-900 shadow-xl scale-[1.02]' 
+                : 'bg-white border-slate-100 shadow-sm hover:border-indigo-200'
+            }`}
+          >
+            <div className={`${statusFilter === s.id ? 'bg-white/10 text-white' : `${s.bg} ${s.col}`} w-14 h-14 rounded-2xl flex items-center justify-center transition-colors`}>
+              <s.icon size={28}/>
             </div>
-          </div>
+            <div>
+              <p className={`${statusFilter === s.id ? 'text-slate-400' : 'text-slate-400'} text-[10px] font-black uppercase tracking-widest`}>{s.label}</p>
+              <h4 className={`text-3xl font-black ${statusFilter === s.id ? 'text-white' : 'text-slate-800'}`}>{s.val}</h4>
+            </div>
+          </button>
         ))}
       </div>
 
       <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
         <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 relative group w-full">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Pencarian Cepat</label>
-            <div className="relative">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-              <input 
-                type="text" 
-                placeholder="Cari nama siswa atau judul tugas..." 
-                value={search} 
-                onChange={e => { setSearch(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
-                className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-inner" 
-              />
-            </div>
+          <div className="flex-1 relative w-full">
+            <input type="text" placeholder="Cari siswa atau tugas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-12 pr-6 py-4 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:bg-white border-2 border-transparent focus:border-indigo-100 transition-all" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
           </div>
-          <div className="w-full md:w-48 relative group">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Kelas</label>
-            <div className="relative">
-              <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-              <select 
-                value={classFilter} 
-                onChange={e => { setClassFilter(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
-                className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
-              >
-                <option value="">Semua Kelas</option>
-                {sortedClasses.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="w-full md:w-48 relative group">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Filter Tugas</label>
-            <div className="relative">
-              <ClipboardList className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-              <select 
-                value={taskFilter} 
-                onChange={e => { setTaskFilter(e.target.value); setDisplayLimit(10); setSelectedIds(new Set()); }} 
-                className="w-full pl-14 pr-10 py-4 bg-slate-50 border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest appearance-none outline-none focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer shadow-inner"
-              >
-                <option value="">Semua Tugas</option>
-                {tasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-              </select>
-            </div>
-          </div>
+          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="w-full md:w-48 p-4 bg-slate-50 rounded-2xl font-black text-[10px] uppercase outline-none">
+            <option value="">Semua Kelas</option>
+            {sortedClasses.map(c => <option key={c.id} value={c.name}>Kelas {c.name}</option>)}
+          </select>
+          <select value={taskFilter} onChange={e => setTaskFilter(e.target.value)} className="w-full md:w-64 p-4 bg-slate-50 rounded-2xl font-black text-[10px] uppercase outline-none">
+            <option value="">Semua Tugas</option>
+            {tasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+          </select>
           <div className="flex gap-2 w-full md:w-auto">
-            <button 
-              onClick={handlePrint}
-              className="flex-1 md:flex-none px-6 py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 transition-all"
-            >
-              <Printer size={18} /> Rekap
-            </button>
-            {selectedIds.size > 0 && (
-              <button 
-                onClick={handleBulkDelete}
-                className="flex-1 md:flex-none px-6 py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-rose-100 animate-in slide-in-from-right-4 duration-300 hover:bg-slate-900 transition-all"
-              >
-                <RotateCcw size={18} /> Reset ({selectedIds.size})
-              </button>
-            )}
+            <button onClick={handlePrint} className="flex-1 md:flex-none px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl font-black text-[10px] uppercase flex items-center gap-2"><Printer size={18} /> Rekap</button>
+            {selectedIds.size > 0 && <button onClick={handleBulkDelete} className="px-6 py-4 bg-rose-600 text-white rounded-2xl font-black text-[10px] uppercase flex items-center gap-2 animate-in slide-in-from-right"><RotateCcw size={18} /> Reset ({selectedIds.size})</button>}
           </div>
         </div>
       </section>
 
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto scrollbar-hide">
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50/50 uppercase text-[10px] font-black text-slate-400 tracking-[0.2em]">
+            <thead className="bg-slate-50/50 uppercase text-[10px] font-black text-slate-400">
               <tr>
-                <th className="px-10 py-6 w-12">
-                   <button onClick={toggleSelectAll} className="p-1 hover:bg-slate-100 rounded-md transition-colors">
-                     {selectedIds.size === displayedSubs.length && displayedSubs.length > 0 ? (
-                       <CheckSquare size={20} className="text-indigo-600" />
-                     ) : (
-                       <Square size={20} className="text-slate-300" />
-                     )}
-                   </button>
-                </th>
+                <th className="px-10 py-6"><button onClick={toggleSelectAll}>{selectedIds.size === displayedSubs.length && displayedSubs.length > 0 ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} />}</button></th>
                 <th className="px-4 py-6">Siswa</th>
-                <th className="px-10 py-6">Tugas & Kelas</th>
-                <th className="px-10 py-6">Status</th>
+                <th className="px-10 py-6">Tugas</th>
                 <th className="px-10 py-6 text-center">Skor</th>
                 <th className="px-10 py-6 text-right">Aksi</th>
               </tr>
@@ -349,182 +259,122 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes }) => {
                 const student = allUsers.find(st => st.id === s.studentId);
                 const task = tasks.find(t => t.id === s.taskId);
                 const isGraded = s.grade !== undefined && s.grade !== null;
-                const isSelected = selectedIds.has(s.id);
-
                 return (
-                  <tr key={s.id} className={`transition-colors group ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-slate-50/50'}`}>
-                    <td className="px-10 py-6">
-                       <button onClick={() => toggleSelect(s.id)} className="p-1 hover:bg-white rounded-md transition-colors shadow-none">
-                         {isSelected ? (
-                           <CheckSquare size={20} className="text-indigo-600" />
-                         ) : (
-                           <Square size={20} className="text-slate-200 group-hover:text-slate-400" />
-                         )}
-                       </button>
-                    </td>
+                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-10 py-6"><button onClick={() => toggleSelect(s.id)}>{selectedIds.has(s.id) ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} className="text-slate-200" />}</button></td>
                     <td className="px-4 py-6">
-                      <div className="flex items-center gap-4">
-                        <img 
-                          src={student?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student?.username}`} 
-                          className="w-10 h-10 rounded-full border-4 border-white bg-slate-50 shadow-sm" 
-                          alt="" 
-                        />
-                        <div className="min-w-0">
-                          <p className="font-black text-slate-800 text-sm truncate">{student?.name || 'User Dihapus'}</p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">@{student?.username || 'unknown'}</p>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <img src={student?.avatar} className="w-10 h-10 rounded-full bg-slate-100" />
+                        <div><p className="font-black text-slate-800 text-sm">{student?.name}</p><p className="text-[9px] text-slate-400 font-bold uppercase">Kelas {student?.classId}</p></div>
                       </div>
                     </td>
-                    <td className="px-10 py-6">
-                      <p className="font-bold text-slate-700 truncate max-w-[200px] mb-1">{task?.title || 'Tugas Dihapus'}</p>
-                      <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full uppercase tracking-widest border border-indigo-100">Kelas {student?.classId || 'N/A'}</span>
-                    </td>
-                    <td className="px-10 py-6">
-                       <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${isGraded ? 'bg-emerald-500' : 'bg-orange-500 animate-pulse'}`}></div>
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${isGraded ? 'text-emerald-600' : 'text-orange-600'}`}>
-                             {isGraded ? 'Dinilai' : 'Menunggu'}
-                          </span>
-                       </div>
-                    </td>
-                    <td className="px-10 py-6 text-center">
-                      <span className={`text-2xl font-black ${isGraded ? 'text-indigo-600' : 'text-slate-200'}`}>
-                        {isGraded ? s.grade : '--'}
-                      </span>
-                    </td>
-                    <td className="px-10 py-6 text-right">
-                      <button 
-                        onClick={() => setGradeModal(s)} 
-                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl ${
-                          isGraded ? 'bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white' : 'bg-slate-900 text-white hover:bg-emerald-600'
-                        }`}
-                      >
-                        {isGraded ? 'Edit Nilai' : 'Beri Nilai'}
-                      </button>
-                    </td>
+                    <td className="px-10 py-6"><p className="font-bold text-slate-700">{task?.title}</p></td>
+                    <td className="px-10 py-6 text-center"><span className={`text-2xl font-black ${isGraded ? 'text-indigo-600' : 'text-slate-200'}`}>{isGraded ? s.grade : '--'}</span></td>
+                    <td className="px-10 py-6 text-right"><button onClick={() => setGradeModal(s)} className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase ${isGraded ? 'bg-slate-100 text-slate-600' : 'bg-slate-900 text-white'}`}>{isGraded ? 'Edit' : 'Nilai'}</button></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
+          {filteredSubs.length === 0 && <div className="py-20 text-center"><p className="text-slate-400 font-black text-xs uppercase tracking-widest">Tidak ada data untuk ditampilkan</p></div>}
+          
+          {filteredSubs.length > displayLimit && (
+            <div className="px-10 py-6 bg-slate-50/30 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Menampilkan {Math.min((currentPage - 1) * displayLimit + 1, filteredSubs.length)} - {Math.min(currentPage * displayLimit, filteredSubs.length)} dari {filteredSubs.length} data
+              </p>
+              <div className="flex items-center gap-2">
+                <button 
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 hover:bg-slate-50 transition-colors"
+                >
+                  Sebelumnya
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = currentPage;
+                    if (totalPages <= 5) pageNum = i + 1;
+                    else if (currentPage <= 3) pageNum = i + 1;
+                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    else pageNum = currentPage - 2 + i;
 
-        {/* Read More Button */}
-        {filteredSubs.length > displayLimit && (
-          <div className="p-8 border-t border-slate-50 bg-slate-50/30 flex justify-center">
-             <button 
-               onClick={() => setDisplayLimit(prev => prev + 10)}
-               className="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 shadow-sm transition-all flex items-center gap-3 active:scale-95"
-             >
-               Tampilkan Lebih Banyak <ChevronDown size={16} />
-             </button>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {filteredSubs.length === 0 && (
-          <div className="py-24 text-center flex flex-col items-center justify-center">
-             <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-3xl flex items-center justify-center mb-6">
-                <ClipboardList size={40} />
-             </div>
-             <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Tidak ada data pengumpulan tugas</p>
-          </div>
-        )}
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${
+                          currentPage === pageNum ? 'bg-slate-900 text-white shadow-lg' : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button 
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 hover:bg-slate-50 transition-colors"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          )}
       </div>
 
       {gradeModal && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6 text-black">
-          <div className="bg-white w-full max-w-xl rounded-[3.5rem] shadow-2xl animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
-            <div className="p-10 border-b border-slate-50 flex items-center justify-between shrink-0">
-               <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
-                    <GraduationCap size={28} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-800 leading-none">Evaluasi Tugas</h3>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Beri skor & catatan perbaikan</p>
-                  </div>
-               </div>
-               <button onClick={() => setGradeModal(null)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
-                  <X size={28} />
-               </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 scrollbar-hide">
-              <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6">
-                  <div className="flex items-center gap-4">
-                     <img 
-                        src={allUsers.find(st => st.id === gradeModal.studentId)?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${gradeModal.studentId}`} 
-                        className="w-14 h-14 rounded-full border-4 border-white shadow-sm"
-                        alt=""
-                     />
-                     <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Identitas Siswa</p>
-                        <p className="font-black text-slate-800 text-lg leading-none">{allUsers.find(st => st.id === gradeModal.studentId)?.name || 'N/A'}</p>
-                        <p className="text-[10px] font-bold text-indigo-600 mt-1 uppercase">Kelas {allUsers.find(st => st.id === gradeModal.studentId)?.classId || 'N/A'}</p>
-                     </div>
-                  </div>
-                  
-                  <div className="pt-6 border-t border-slate-200">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Tautan Tugas Terkirim</p>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl font-bold text-[11px] truncate shadow-inner">
-                        {gradeModal.content}
-                      </div>
-                      <a 
-                        href={gradeModal.content} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95"
-                      >
-                        <ExternalLink size={20} />
-                      </a>
-                    </div>
-                  </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                    <div className="space-y-3">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Skor Penilaian (0-100)</label>
-                      <input 
-                        type="number" 
-                        min="0" 
-                        max="100" 
-                        value={gradeModal.grade === null ? '' : gradeModal.grade} 
-                        onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} 
-                        placeholder="Masukkan Angka..." 
-                        className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl text-3xl font-black text-indigo-600 outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner" 
-                      />
-                    </div>
-                    <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-[0.15em] leading-relaxed flex items-center gap-3">
-                      <Award size={20} /> Siswa akan menerima notifikasi skor segera setelah disimpan.
-                    </div>
+          <div className="bg-white w-full max-w-xl rounded-[3.5rem] shadow-2xl flex flex-col p-10 space-y-8 animate-in zoom-in-95">
+             <div className="flex justify-between items-center">
+                <div>
+                   <h3 className="text-2xl font-black">Evaluasi Tugas</h3>
+                   <p className="text-[10px] font-black uppercase text-slate-400 mt-1">
+                      Siswa: {allUsers.find(u => u.id === gradeModal.studentId)?.name}
+                   </p>
                 </div>
+                <button onClick={() => setGradeModal(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={28}/></button>
+             </div>
+             
+             <div className="flex items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <button 
+                  disabled={filteredSubs.findIndex(s => s.id === gradeModal.id) === 0}
+                  onClick={handlePrevStudent}
+                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+                >
+                   <ChevronDown className="rotate-90" size={16} /> Sebelumnya
+                </button>
+                <div className="h-4 w-px bg-slate-200"></div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                   {filteredSubs.findIndex(s => s.id === gradeModal.id) + 1} / {filteredSubs.length}
+                </span>
+                <div className="h-4 w-px bg-slate-200"></div>
+                <button 
+                  disabled={filteredSubs.findIndex(s => s.id === gradeModal.id) === filteredSubs.length - 1}
+                  onClick={handleNextStudent}
+                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+                >
+                   Selanjutnya <ChevronDown className="-rotate-90" size={16} />
+                </button>
+             </div>
 
-                <div className="space-y-3">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Umpan Balik Guru (Feedback)</label>
-                  <div className="relative">
-                    <MessageSquare className="absolute left-5 top-5 text-slate-300" size={20} />
-                    <textarea 
-                      value={gradeModal.feedback || ''} 
-                      onChange={e => setGradeModal({...gradeModal, feedback: e.target.value})} 
-                      placeholder="Tuliskan catatan perbaikan atau apresiasi untuk siswa..." 
-                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-100 rounded-3xl font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner h-32 resize-none"
-                    />
-                  </div>
+             <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase text-slate-400">Tautan Hasil Kerja:</p>
+                <a href={gradeModal.content} target="_blank" className="block p-4 bg-slate-50 border rounded-2xl font-bold text-indigo-600 truncate flex items-center justify-between group">
+                   <span className="truncate">{gradeModal.content}</span>
+                   <ExternalLink size={16} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+             </div>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase text-slate-400">Skor (0-100)</label>
+                   <input type="number" value={gradeModal.grade} onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} className="w-full p-5 bg-slate-50 border-2 rounded-2xl font-black text-2xl" />
                 </div>
-              </div>
-            </div>
-
-            <div className="p-10 border-t border-slate-50 shrink-0">
-              <button 
-                onClick={handleGrade} 
-                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-600 transition-all flex items-center justify-center gap-4 active:scale-95 shadow-2xl shadow-slate-100"
-              >
-                <Save size={20}/> Simpan & Publikasikan Nilai
-              </button>
-            </div>
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-700 text-[10px] font-bold">Input nilai di samping dan simpan untuk mempublikasikan hasil.</div>
+             </div>
+             <textarea value={gradeModal.feedback ?? ''} onChange={e => setGradeModal({...gradeModal, feedback: e.target.value})} placeholder="Catatan perbaikan..." className="w-full p-5 bg-slate-50 border-2 rounded-2xl h-24 font-bold" />
+             <button onClick={handleGrade} className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase shadow-xl hover:bg-emerald-600 transition-all">Simpan Nilai</button>
           </div>
         </div>
       )}

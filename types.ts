@@ -7,11 +7,12 @@ export interface User {
   username: string;
   name: string;
   role: Role;
-  classId?: string;
+  classId?: string; // Untuk Siswa
+  assignedClassIds?: string[]; // Untuk Guru (Kelas yang diampu)
+  subject?: string; // Untuk Guru (Mata Pelajaran)
   avatar?: string;
   status: UserStatus;
   createdAt?: string;
-  // Added password property to support account updates in the settings view
   password?: string;
 }
 
@@ -27,7 +28,9 @@ export interface Material {
   description: string;
   type: 'file' | 'link' | 'embed';
   content: string;
-  targetClassIds: string[]; // Disimpan sebagai array string
+  subject: string; // Mapel terkait
+  authorId: string; // ID Guru pembuat
+  targetClassIds: string[];
   createdAt: string;
 }
 
@@ -37,7 +40,9 @@ export interface Task {
   description: string;
   type: 'file' | 'link' | 'embed';
   content: string;
-  targetClassIds: string[]; // Disimpan sebagai array string
+  subject: string; // Mapel terkait
+  authorId: string; // ID Guru pembuat
+  targetClassIds: string[];
   dueDate: string;
   isSubmissionEnabled: boolean;
   createdAt: string;
@@ -55,7 +60,7 @@ export interface Submission {
 
 export interface Notification {
   id: string;
-  userId: string; // Target user ID
+  userId: string;
   title: string;
   message: string;
   read: boolean;

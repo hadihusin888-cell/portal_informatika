@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { BarChart3, BookOpen, ClipboardList, Users, School, Settings, UserPlus, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BarChart3, BookOpen, ClipboardList, Users, School, Settings, UserPlus, CheckCircle, AlertTriangle, Briefcase } from 'lucide-react';
 import Layout from '../components/Layout.tsx';
 import { User, SiteSettings, ClassRoom } from '../types.ts';
 import { db } from '../App.tsx';
@@ -14,6 +15,7 @@ import GradesTab from './admin/GradesTab.tsx';
 import ManageStudentsTab from './admin/ManageStudentsTab.tsx';
 import ManageClassesTab from './admin/ManageClassesTab.tsx';
 import SettingsTab from './admin/SettingsTab.tsx';
+import ManageTeachersTab from './admin/ManageTeachersTab.tsx';
 
 interface AdminDashboardProps {
   user: User;
@@ -42,7 +44,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
   });
 
   useEffect(() => {
-    // 1. Real-time Notifications Listener
     const qNotifs = query(
       collection(firestore, 'elearning_notifications'), 
       where('userId', '==', user.id)
@@ -53,7 +54,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
       setNotifications(notifList);
     });
 
-    // 2. Fetch Classes
     const fetchClasses = async () => {
       const c = await db.get('elearning_classes');
       setClasses(Array.isArray(c) ? c : []);
@@ -69,7 +69,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
     const notif = notifications.find(n => n.id === id);
     if (notif) {
       await db.update('elearning_notifications', id, { ...notif, read: true });
-      // Notifications will be updated automatically via onSnapshot listener
     }
   };
 
@@ -77,20 +76,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
     const updated = notifications.filter(n => !n.read).map(n => ({ ...n, read: true }));
     if (updated.length > 0) {
       await db.saveAll('elearning_notifications', updated);
-      // Notifications will be updated automatically via onSnapshot listener
     }
   };
 
-  const sidebarItems = [
-    { id: 'overview', label: 'Ringkasan', icon: BarChart3 },
-    { id: 'confirmations', label: 'Konfirmasi Siswa', icon: UserPlus },
-    { id: 'materials', label: 'Kelola Materi', icon: BookOpen },
-    { id: 'tasks', label: 'Kelola Tugas', icon: ClipboardList },
-    { id: 'grades', label: 'Nilai Tugas', icon: CheckCircle },
-    { id: 'students', label: 'Kelola Siswa', icon: Users },
-    { id: 'classes', label: 'Kelola Kelas', icon: School },
-    { id: 'settings', label: 'Pengaturan', icon: Settings },
-  ];
+  // Identifikasi apakah ini Admin Utama atau Guru Mapel
+  const isSuperAdmin = user.username === 'admin';
+
+  // Sembunyikan menu manajemen sistem untuk Guru Mapel lain
+  const sidebarItems = isSuperAdmin 
+    ? [
+        { id: 'overview', label: 'Ringkasan', icon: BarChart3 },
+        { id: 'confirmations', label: 'Konfirmasi Siswa', icon: UserPlus },
+        { id: 'teachers', label: 'Kelola Guru', icon: Briefcase },
+        { id: 'materials', label: 'Kelola Materi', icon: BookOpen },
+        { id: 'tasks', label: 'Kelola Tugas', icon: ClipboardList },
+        { id: 'grades', label: 'Nilai Tugas', icon: CheckCircle },
+        { id: 'students', label: 'Kelola Siswa', icon: Users },
+        { id: 'classes', label: 'Kelola Kelas', icon: School },
+        { id: 'settings', label: 'Pengaturan', icon: Settings },
+      ]
+    : [
+        { id: 'overview', label: 'Ringkasan', icon: BarChart3 },
+        { id: 'materials', label: 'Kelola Materi', icon: BookOpen },
+        { id: 'tasks', label: 'Kelola Tugas', icon: ClipboardList },
+        { id: 'grades', label: 'Nilai Tugas', icon: CheckCircle },
+        { id: 'students', label: 'Daftar Siswa', icon: Users },
+        { id: 'settings', label: 'Profil Saya', icon: Settings },
+      ];
 
   const triggerConfirm = (title: string, message: string, onConfirm: () => void, type: 'danger' | 'warning' = 'danger') => {
     setConfirmModal({ isOpen: true, title, message, onConfirm, type });
@@ -100,15 +112,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, setting
 
   const renderContent = () => {
     switch (activeView) {
-      case 'overview': return <OverviewTab setActiveView={setActiveView} />;
-      case 'confirmations': return <ConfirmRegistrationsTab triggerConfirm={triggerConfirm} />;
-      case 'materials': return <ManageMaterialsTab triggerConfirm={triggerConfirm} classes={classes} />;
-      case 'tasks': return <ManageTasksTab triggerConfirm={triggerConfirm} classes={classes} />;
-      case 'grades': return <GradesTab triggerConfirm={triggerConfirm} classes={classes} />;
-      case 'students': return <ManageStudentsTab triggerConfirm={triggerConfirm} classes={classes} />;
-      case 'classes': return <ManageClassesTab triggerConfirm={triggerConfirm} classes={classes} setClasses={setClasses} />;
+      case 'overview': return <OverviewTab setActiveView={setActiveView} currentUser={user} />;
+      case 'confirmations': return isSuperAdmin ? <ConfirmRegistrationsTab triggerConfirm={triggerConfirm} /> : null;
+      case 'teachers': return isSuperAdmin ? <ManageTeachersTab triggerConfirm={triggerConfirm} classes={classes} /> : null;
+      case 'materials': return <ManageMaterialsTab triggerConfirm={triggerConfirm} classes={classes} currentUser={user} />;
+      case 'tasks': return <ManageTasksTab triggerConfirm={triggerConfirm} classes={classes} currentUser={user} />;
+      case 'grades': return <GradesTab triggerConfirm={triggerConfirm} classes={classes} currentUser={user} />;
+      case 'students': return <ManageStudentsTab triggerConfirm={triggerConfirm} classes={classes} currentUser={user} />;
+      case 'classes': return isSuperAdmin ? <ManageClassesTab triggerConfirm={triggerConfirm} classes={classes} setClasses={setClasses} /> : null;
       case 'settings': return <SettingsTab settings={settings} setSettings={setSettings} user={user} onUpdateUser={onUpdateUser!} />;
-      default: return <OverviewTab setActiveView={setActiveView} />;
+      default: return <OverviewTab setActiveView={setActiveView} currentUser={user} />;
     }
   };
 

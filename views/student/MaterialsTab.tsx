@@ -1,29 +1,61 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   FileText, ExternalLink, Search, Filter, 
   PlayCircle, Link as LinkIcon, Clock, Sparkles, 
   SearchX, ChevronRight, BookOpen, X, Info,
-  Monitor, Globe, ArrowUpRight, Zap
+  Monitor, Globe, ArrowUpRight, Zap, CheckCircle2,
+  BookMarked
 } from 'lucide-react';
+import { db } from '../../App.tsx';
 
 interface MaterialsTabProps {
   materials: any[];
+  initialSubject?: string;
 }
 
-const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials }) => {
+const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }) => {
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeTypeFilter, setActiveTypeFilter] = useState('all');
+  const [subjectFilter, setSubjectFilter] = useState(initialSubject || 'all');
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<any | null>(null);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
+  // Ambil daftar mata pelajaran dari semua Guru yang terdaftar
+  useEffect(() => {
+    const fetchAllSubjects = async () => {
+      setLoadingSubjects(true);
+      try {
+        const allUsers = await db.get('users');
+        const teachers = Array.isArray(allUsers) ? allUsers.filter((u: any) => u.role === 'ADMIN' && u.subject) : [];
+        const subjects = Array.from(new Set(teachers.map((t: any) => t.subject)));
+        setAvailableSubjects(subjects as string[]);
+      } catch (err) {
+        console.error("Gagal memuat daftar mapel:", err);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+    fetchAllSubjects();
+  }, []);
+
+  // Efek untuk menangani filter otomatis saat navigasi dari Home (Masuk Kelas)
+  useEffect(() => {
+    if (initialSubject) {
+      setSubjectFilter(initialSubject);
+    }
+  }, [initialSubject]);
 
   const filteredMaterials = useMemo(() => {
     return materials.filter(m => {
-      const matchSearch = m.title.toLowerCase().includes(search.toLowerCase()) || 
-                          m.description.toLowerCase().includes(search.toLowerCase());
-      const matchFilter = activeFilter === 'all' || m.type === activeFilter;
-      return matchSearch && matchFilter;
+      const matchSearch = (m.title || '').toLowerCase().includes(search.toLowerCase()) || 
+                          (m.description || '').toLowerCase().includes(search.toLowerCase());
+      const matchType = activeTypeFilter === 'all' || m.type === activeTypeFilter;
+      const matchSubject = subjectFilter === 'all' || m.subject === subjectFilter;
+      return matchSearch && matchType && matchSubject;
     });
-  }, [materials, search, activeFilter]);
+  }, [materials, search, activeTypeFilter, subjectFilter]);
 
   const getTypeStyle = (type: string) => {
     switch(type) {
@@ -37,154 +69,218 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials }) => {
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
     let embedUrl = url;
-    
-    // YouTube
     if (url.includes('youtube.com/watch?v=')) {
       embedUrl = url.replace('watch?v=', 'embed/');
     } else if (url.includes('youtu.be/')) {
       embedUrl = 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1];
-    }
-    // Google Forms/Docs/Slides
-    else if (url.includes('docs.google.com')) {
+    } else if (url.includes('docs.google.com')) {
       embedUrl = url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`;
+    } else if (url.includes('canva.com/design/')) {
+      const baseUrl = url.split('?')[0];
+      embedUrl = baseUrl.includes('/view') ? `${baseUrl}?embed` : `${baseUrl}/view?embed`;
     }
-    // Canva
-    else if (url.includes('canva.com/design/')) {
-      const baseUrl = url.split('?')[0]; // Ambil URL dasar tanpa utm_content dll
-      // Cek apakah sudah ada /view di akhir, jika belum tambahkan
-      if (baseUrl.includes('/view')) {
-        embedUrl = `${baseUrl}?embed`;
-      } else {
-        // Menangani format link canva yang berbeda-apa
-        const match = baseUrl.match(/design\/([^\/]+)\//);
-        if (match && match[1]) {
-           embedUrl = `https://www.canva.com/design/${match[1]}/view?embed`;
-        } else {
-           embedUrl = `${baseUrl}/view?embed`;
-        }
-      }
-    }
-    
     return embedUrl;
   };
 
   return (
-    <div className="space-y-4 md:space-y-8 animate-in fade-in duration-700 text-black pb-20">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-700 text-black pb-24 max-w-[1600px] mx-auto">
       
-      {/* Search & Filter */}
-      <section className="bg-white p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          <div className="space-y-0.5">
-            <h3 className="text-lg md:text-xl font-black text-slate-800 tracking-tight">Perpustakaan Digital</h3>
-            <p className="text-slate-500 font-medium text-[10px] md:text-xs">Akses materi Informatika kapan pun.</p>
+      {/* Header & Filter Section */}
+      <section className="bg-white p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-indigo-500 rounded-full"></div>
+              Pustaka Belajar
+            </h3>
+            <p className="text-slate-500 font-medium text-sm">Temukan materi belajar terpadu dari bapak/ibu guru pengampu.</p>
           </div>
-          <div className="relative w-full md:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4 md:w-[18px] md:h-[18px] group-focus-within:text-emerald-500 transition-colors" size={18} />
+          <div className="relative w-full md:w-[400px] group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
             <input 
               type="text" 
-              placeholder="Cari materi..." 
+              placeholder="Cari judul materi..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-5 py-2.5 md:py-3 bg-slate-50 border border-slate-100 rounded-xl md:rounded-2xl font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all text-xs md:text-sm shadow-inner"
+              className="w-full pl-16 pr-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-white focus:border-indigo-500/10 transition-all text-sm shadow-inner"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 md:gap-2">
-          {['all', 'embed', 'file', 'link'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`px-4 py-2 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest transition-all ${
-                activeFilter === f ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
-              }`}
-            >
-              {f === 'all' ? 'Semua' : f === 'embed' ? 'Video' : f === 'file' ? 'Modul' : 'Tautan'}
-            </button>
-          ))}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pt-4 border-t border-slate-50">
+           {/* Subject Pills - DAFTAR FILTER MAPEL */}
+           <div className="space-y-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <Filter size={12} /> Pilih Mata Pelajaran
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSubjectFilter('all')}
+                  className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    subjectFilter === 'all' 
+                    ? 'bg-slate-900 text-white shadow-lg scale-105' 
+                    : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
+                  }`}
+                >
+                  Semua Mapel
+                </button>
+                {availableSubjects.map(sub => (
+                  <button
+                    key={sub}
+                    onClick={() => setSubjectFilter(sub)}
+                    className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
+                      subjectFilter === sub 
+                      ? 'bg-indigo-600 text-white shadow-lg scale-105' 
+                      : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
+                    }`}
+                  >
+                    {sub}
+                    {subjectFilter === sub && <CheckCircle2 size={12} />}
+                  </button>
+                ))}
+                {loadingSubjects && <div className="px-4 py-3 animate-pulse bg-slate-50 rounded-2xl w-24 h-10"></div>}
+              </div>
+           </div>
+
+           {/* Type Select */}
+           <div className="space-y-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <Zap size={12} /> Format Pembelajaran
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'all', label: 'Semua Format' },
+                  { id: 'embed', label: 'Video & Media' },
+                  { id: 'file', label: 'Modul PDF/File' },
+                  { id: 'link', label: 'Tautan Luar' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setActiveTypeFilter(f.id)}
+                    className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                      activeTypeFilter === f.id 
+                      ? 'bg-indigo-600 text-white shadow-lg scale-105' 
+                      : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+           </div>
         </div>
       </section>
 
       {/* Materials Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {filteredMaterials.map((m: any) => {
           const style = getTypeStyle(m.type);
           const Icon = style.icon;
           return (
-            <div key={m.id} className="bg-white rounded-2xl md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col overflow-hidden">
-              <div className={`h-20 md:h-24 ${style.bg} relative flex items-center justify-center`}>
-                <Icon size={28} className={`${style.text} opacity-20 group-hover:scale-110 transition-transform md:w-8 md:h-8`} />
+            <div key={m.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group flex flex-col overflow-hidden relative">
+              <div className={`h-32 ${style.bg} relative flex items-center justify-center overflow-hidden`}>
+                <Icon size={56} className={`${style.text} opacity-10 group-hover:scale-125 transition-transform duration-700`} />
+                <div className="absolute top-5 left-5">
+                   <span className="px-4 py-1.5 bg-white/95 backdrop-blur-sm text-[9px] font-black text-slate-800 uppercase tracking-widest rounded-xl shadow-sm border border-slate-100">
+                      {m.subject}
+                   </span>
+                </div>
               </div>
-              <div className="p-5 md:p-6 flex-1 flex flex-col">
-                <span className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest px-2 py-0.5 ${style.bg} ${style.text} rounded-md w-fit mb-2 md:mb-3`}>
+              <div className="p-8 flex-1 flex flex-col">
+                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 ${style.bg} ${style.text} rounded-xl w-fit mb-5`}>
                   {style.label}
                 </span>
-                <h4 className="text-sm md:text-base font-black text-slate-800 mb-1.5 md:mb-2 leading-tight line-clamp-2">{m.title}</h4>
-                <p className="text-[10px] md:text-[11px] text-slate-500 font-medium mb-4 line-clamp-2 opacity-80 leading-relaxed">{m.description || 'Pelajari materi ini.'}</p>
+                <h4 className="text-xl font-black text-slate-800 mb-3 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">{m.title}</h4>
+                <p className="text-sm text-slate-500 font-medium mb-8 line-clamp-3 leading-relaxed opacity-70">
+                  {m.description || 'Pelajari modul ini untuk memperdalam pemahaman mata pelajaran.'}
+                </p>
                 <button 
                   onClick={() => setSelectedMaterial(m)}
-                  className="mt-auto w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[8px] md:text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                  className="mt-auto w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
                 >
-                  Buka Materi <ChevronRight size={14}/>
+                  Buka Modul <ChevronRight size={18}/>
                 </button>
               </div>
             </div>
           );
         })}
+
+        {filteredMaterials.length === 0 && (
+           <div className="col-span-full py-32 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+              {subjectFilter === 'all' ? (
+                <>
+                  <SearchX size={64} className="mx-auto text-slate-100 mb-6" />
+                  <h4 className="text-xl font-black text-slate-300 uppercase tracking-widest">Tidak ada materi ditemukan</h4>
+                  <p className="text-slate-400 text-sm mt-2">Belum ada materi yang diunggah untuk kelas Anda.</p>
+                </>
+              ) : (
+                <>
+                  <BookMarked size={64} className="mx-auto text-indigo-100 mb-6" />
+                  <h4 className="text-xl font-black text-indigo-300 uppercase tracking-widest">Materi {subjectFilter} Kosong</h4>
+                  <p className="text-slate-400 text-sm mt-2">Guru pengampu belum mengunggah materi untuk mata pelajaran ini.</p>
+                  <button onClick={() => setSubjectFilter('all')} className="mt-8 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">
+                    Lihat Semua Mapel
+                  </button>
+                </>
+              )}
+           </div>
+        )}
       </section>
 
-      {/* Embed Modal for Materials */}
-      {selectedMaterial && (() => {
-        const style = getTypeStyle(selectedMaterial.type);
-        const Icon = style.icon;
-        return (
-          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-6xl h-full md:max-h-[90vh] rounded-2xl md:rounded-[3.5rem] shadow-2xl flex flex-col overflow-hidden">
-              
-              {/* Header */}
-              <div className="p-4 md:px-10 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
-                 <div className="flex items-center gap-3 md:gap-4">
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ${style.bg} ${style.text} shadow-inner`}>
-                      <Icon size={20} className="md:w-6 md:h-6" />
+      {/* Material Modal */}
+      {selectedMaterial && (
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-white w-full max-w-7xl h-full md:max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-6 md:px-12 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+               <div className="flex items-center gap-6">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${getTypeStyle(selectedMaterial.type).bg} ${getTypeStyle(selectedMaterial.type).text} shadow-inner`}>
+                    <BookOpen size={32} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none">{selectedMaterial.title}</h3>
+                    <div className="flex items-center gap-3 mt-3">
+                       <span className="text-indigo-600 font-black text-[10px] uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">{selectedMaterial.subject}</span>
+                       <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
+                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+                         <Globe size={12} /> E-Learning Al Irsyad Surakarta
+                       </p>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm md:text-xl font-black text-slate-800 leading-none truncate max-w-[180px] md:max-w-none">{selectedMaterial.title}</h3>
-                      <p className="text-slate-400 font-bold text-[8px] md:text-[9px] uppercase tracking-widest mt-1 md:mt-2">Materi Informatika</p>
-                    </div>
-                 </div>
-                 <button onClick={() => setSelectedMaterial(null)} className="p-2 md:p-3 bg-slate-50 text-slate-400 rounded-lg md:rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
-                    <X size={20} className="md:w-6 md:h-6" />
-                 </button>
-              </div>
+                  </div>
+               </div>
+               <button onClick={() => setSelectedMaterial(null)} className="p-4 bg-slate-50 text-slate-400 rounded-3xl hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90">
+                  <X size={28} />
+               </button>
+            </div>
 
-              {/* Content Area */}
-              <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                {/* Main Viewer */}
-                <div className="flex-1 bg-slate-100 relative p-3 md:p-8 flex flex-col">
-                   <div className="bg-blue-50 border border-blue-100 p-3 md:p-4 rounded-xl md:rounded-2xl mb-3 md:mb-4 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                         <Info size={14} className="text-blue-500 shrink-0 md:w-4 md:h-4" />
-                         <p className="text-[9px] md:text-[10px] font-bold text-blue-700 leading-tight">Lihat materi di bawah atau buka di tab baru.</p>
-                      </div>
-                      <a href={selectedMaterial.content} target="_blank" rel="noreferrer" className="shrink-0 px-3 md:px-5 py-2 bg-white text-blue-600 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-blue-100 hover:bg-blue-600 hover:text-white transition-all">Tab Baru</a>
-                   </div>
+            <div className="flex-1 bg-slate-50 relative p-4 md:p-10 flex flex-col overflow-hidden">
+               <div className="bg-white border border-slate-200 p-5 rounded-3xl mb-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                  <div className="flex items-center gap-4">
+                     <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center">
+                        <Info size={20} />
+                     </div>
+                     <p className="text-xs font-bold text-slate-600 leading-relaxed max-w-lg">
+                       Materi dimuat dari server eksternal. Gunakan fitur "Buka di Tab Baru" jika tampilan modul tidak maksimal pada layar Anda.
+                     </p>
+                  </div>
+                  <a href={selectedMaterial.content} target="_blank" rel="noreferrer" className="w-full md:w-auto px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl flex items-center justify-center gap-2">
+                    Buka di Tab Baru <ArrowUpRight size={14} />
+                  </a>
+               </div>
 
-                   <div className="flex-1 w-full bg-white rounded-xl md:rounded-[2rem] shadow-xl overflow-hidden border-2 md:border-4 border-white">
-                      <iframe 
-                        src={getEmbedUrl(selectedMaterial.content)} 
-                        className="w-full h-full border-0" 
-                        allowFullScreen 
-                        title="Material Content"
-                        loading="lazy"
-                        allow="fullscreen"
-                      ></iframe>
-                   </div>
-                </div>
-              </div>
+               <div className="flex-1 w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-white">
+                  <iframe 
+                    src={getEmbedUrl(selectedMaterial.content)} 
+                    className="w-full h-full border-0" 
+                    allowFullScreen 
+                    title="Material View"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  ></iframe>
+               </div>
             </div>
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 };

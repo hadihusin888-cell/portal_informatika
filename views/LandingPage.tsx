@@ -67,13 +67,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
             <div className="flex flex-col sm:flex-row items-center gap-5 justify-center lg:justify-start pt-4">
               <button 
                 onClick={onNavigateSignup}
-                className="w-full sm:w-auto px-10 py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-200 group active:scale-95"
+                className="w-full sm:w-auto px-10 py-5 bg-emerald-600 text-white rounded-3xl font-black text-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-200 group active:scale-95"
               >
                 Mulai Belajar <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
               </button>
               <button 
                 onClick={() => onNavigateLogin('STUDENT')}
-                className="w-full sm:w-auto px-10 py-5 bg-white text-slate-700 border-2 border-slate-100 rounded-[2rem] font-black text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg"
+                className="w-full sm:w-auto px-10 py-5 bg-white text-slate-700 border-2 border-slate-100 rounded-3xl font-black text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg"
               >
                 Cek Nilai Saya
               </button>
@@ -81,12 +81,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
           </div>
           <div className="flex-1 w-full">
             <div className="relative">
-              <div className="absolute -inset-6 bg-gradient-to-tr from-emerald-400 to-blue-500 rounded-[4rem] blur-[40px] opacity-10 animate-pulse"></div>
-              <div className="relative bg-white p-3 rounded-[3.5rem] shadow-2xl border border-slate-100">
+              <div className="absolute -inset-6 bg-gradient-to-tr from-emerald-400 to-blue-500 rounded-3xl blur-[40px] opacity-10 animate-pulse"></div>
+              <div className="relative bg-white p-3 rounded-3xl shadow-2xl border border-slate-100">
                 <img 
                   src={settings.heroImageUrl} 
                   alt="Hero" 
-                  className="rounded-[2.8rem] w-full object-cover aspect-[4/3] shadow-inner"
+                  className="rounded-2xl w-full object-cover aspect-[4/3] shadow-inner"
                 />
               </div>
               
@@ -136,9 +136,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
               },
             ].map((f, i) => (
               <div key={i} className="group relative">
-                <div className="absolute inset-0 bg-slate-50 rounded-[3rem] transition-all duration-500 group-hover:scale-105 group-hover:bg-white group-hover:shadow-2xl group-hover:shadow-slate-200"></div>
+                <div className="absolute inset-0 bg-slate-50 rounded-3xl transition-all duration-500 group-hover:scale-105 group-hover:bg-white group-hover:shadow-2xl group-hover:shadow-slate-200"></div>
                 <div className="relative p-12 space-y-8">
-                  <div className={`w-20 h-20 rounded-[2rem] bg-gradient-to-br ${f.color} flex items-center justify-center text-white shadow-xl shadow-emerald-100 group-hover:rotate-12 transition-transform duration-500`}>
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white shadow-xl shadow-emerald-100 group-hover:rotate-12 transition-transform duration-500`}>
                     <f.icon size={36} />
                   </div>
                   <div className="space-y-4">

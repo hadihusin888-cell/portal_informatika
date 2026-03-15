@@ -1,28 +1,26 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Loader2, Plus, Search, Filter, BookOpen, Link as LinkIcon, 
-  Edit, PlayCircle, FileText, SearchX, X, Info, 
-  Zap, School, Save, Trash2, ExternalLink, Globe,
-  LayoutGrid, Youtube, FileCode, CheckCircle2,
-  ChevronRight, Bookmark
+  Loader2, Plus, Search, BookOpen, Link as LinkIcon, Edit, 
+  PlayCircle, FileText, SearchX, X, Save, Trash2, Globe, Youtube,
+  Target, Info, Layers, Type, Hash, ArrowUpRight, Zap
 } from 'lucide-react';
 import { db } from '../../App.tsx';
-import { Material, ClassRoom } from '../../types.ts';
+import { Material, ClassRoom, User } from '../../types.ts';
 import { notifyStudents } from '../../utils/helpers.ts';
 
 interface ManageMaterialsTabProps {
   triggerConfirm: any;
   classes: ClassRoom[];
+  currentUser: User;
 }
 
-const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm, classes }) => {
+const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm, classes, currentUser }) => {
   const [items, setItems] = useState<Material[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState('');
-  const [classFilter, setClassFilter] = useState('');
   const [form, setForm] = useState<Partial<Material>>({ 
     title: '', 
     description: '', 
@@ -37,13 +35,20 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
     setLoading(true);
     try {
       const saved = await db.get('elearning_materials');
-      setItems(Array.isArray(saved) ? saved : []);
+      const allMaterials = Array.isArray(saved) ? saved : [];
+      setItems(currentUser.username === 'admin' ? allMaterials : allMaterials.filter((m: any) => m.authorId === currentUser.id));
     } catch (err) {
-      console.error("Gagal memuat materi:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  const sortedClasses = useMemo(() => {
+    return [...classes].sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    );
+  }, [classes]);
 
   const ensureArray = (data: any): string[] => {
     if (Array.isArray(data)) return data;
@@ -51,315 +56,287 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
     return [];
   };
 
-  const filteredItems = useMemo(() => items.filter(it => {
-    const targetClasses = ensureArray(it.targetClassIds);
-    const matchSearch = it.title.toLowerCase().includes(search.toLowerCase()) || 
-                        it.description.toLowerCase().includes(search.toLowerCase());
-    const matchClass = !classFilter || targetClasses.includes(classFilter);
-    return matchSearch && matchClass;
-  }), [items, search, classFilter]);
-
   const handleSave = async () => {
     if (!form.title || !form.content || ensureArray(form.targetClassIds).length === 0) { 
-      alert("Mohon lengkapi Judul, Link Konten, dan minimal satu Kelas Target"); 
-      return; 
+      alert("Mohon lengkapi Judul, Konten, dan Target Kelas."); return; 
     }
     
     setIsSaving(true);
-    const isNew = !form.id;
-    // Simpan sebagai array di Firestore sesuai types.ts
     const newItem: Material = { 
       ...form, 
       id: form.id || `mat_${Date.now()}`, 
+      subject: currentUser.subject || 'Informatika',
+      authorId: currentUser.id,
       targetClassIds: ensureArray(form.targetClassIds),
       createdAt: form.createdAt || new Date().toLocaleString('id-ID'),
-      type: form.type as any || 'link',
-      title: form.title || '',
-      description: form.description || '',
-      content: form.content || ''
     } as Material;
 
     try {
-      if (isNew) {
+      if (!form.id) {
         await db.add('elearning_materials', newItem);
         setItems([newItem, ...items]);
-        await notifyStudents(newItem.targetClassIds, "Materi Baru!", `Guru telah mempublikasikan materi: ${newItem.title}`, "material");
+        await notifyStudents(newItem.targetClassIds, `Materi ${newItem.subject} Baru!`, `${currentUser.name} mengunggah: ${newItem.title}`, "material");
       } else {
         await db.update('elearning_materials', newItem.id, newItem);
         setItems(items.map(it => it.id === newItem.id ? newItem : it));
       }
       setShowModal(false);
     } catch (err) {
-      alert("Gagal menyimpan materi ke Cloud.");
+      alert("Gagal menyimpan ke cloud.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    triggerConfirm(
-      `Hapus Materi?`, 
-      `Materi "${title}" akan dihapus permanen. Siswa tidak akan bisa lagi mengakses konten ini.`, 
-      async () => {
-        try {
-          await db.delete('elearning_materials', id);
-          setItems(items.filter(it => it.id !== id));
-        } catch (err) {
-          alert("Gagal menghapus materi.");
-        }
-      }
-    );
-  };
-
   const getTypeStyle = (type: string) => {
     switch(type) {
-      case 'link': return { icon: LinkIcon, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100', label: 'Tautan' };
-      case 'embed': return { icon: Youtube, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100', label: 'Interaktif' };
-      case 'file': return { icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-100', label: 'Dokumen' };
-      default: return { icon: BookOpen, color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-100', label: 'Materi' };
+      case 'link': return { icon: LinkIcon, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Tautan Luar' };
+      case 'embed': return { icon: Youtube, color: 'text-rose-500', bg: 'bg-rose-50', label: 'Media/Video' };
+      case 'file': return { icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Modul PDF/File' };
+      default: return { icon: BookOpen, color: 'text-slate-500', bg: 'bg-slate-50', label: 'Materi' };
     }
   };
 
-  if (loading) return (
-    <div className="py-32 flex flex-col items-center justify-center gap-4 text-black">
-      <Loader2 className="animate-spin text-emerald-600" size={48} />
-      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Sinkronisasi Cloud...</p>
-    </div>
+  const filteredItems = items.filter(it => 
+    it.title.toLowerCase().includes(search.toLowerCase()) || 
+    it.description.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (loading) return <div className="py-32 flex flex-col items-center justify-center gap-4 text-black"><Loader2 className="animate-spin text-emerald-600" size={48} /><p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Memuat Pustaka Materi...</p></div>;
+
   return (
-    <div className="space-y-8 text-black animate-in fade-in duration-500 pb-24">
-      {/* Action Header */}
-      <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-5">
-           <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center shadow-inner">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-24 max-w-[1600px] mx-auto text-black">
+      
+      {/* Header Panel */}
+      <section className="bg-white p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex items-center gap-6 w-full md:w-auto">
+           <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
               <BookOpen size={32} />
            </div>
            <div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Katalog Materi</h3>
-              <p className="text-slate-500 font-medium text-sm mt-1">Mengelola {items.length} modul pembelajaran informatika.</p>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">Pustaka Materi</h3>
+              <p className="text-slate-500 font-medium text-sm mt-1">Anda memiliki {items.length} materi aktif di cloud.</p>
            </div>
         </div>
-        <div className="flex flex-wrap gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+        
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-64 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
             <input 
-              type="text" placeholder="Cari judul..." 
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-emerald-500/20 outline-none font-bold text-sm transition-all shadow-inner"
+              type="text" 
+              placeholder="Cari materi..." 
+              value={search} 
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-13 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-emerald-500/10 transition-all shadow-inner"
             />
           </div>
           <button 
-            onClick={() => { 
-              setForm({ title: '', description: '', type: 'link', content: '', targetClassIds: [] }); 
-              setShowModal(true); 
-            }} 
-            className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-600 active:scale-95 transition-all"
+            onClick={() => { setForm({ title: '', description: '', type: 'link', content: '', targetClassIds: [] }); setShowModal(true); }} 
+            className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-600 transition-all active:scale-95"
           >
             <Plus size={20}/> Materi Baru
           </button>
         </div>
       </section>
 
-      {/* Stats Quick Filter */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-        {['all', 'link', 'embed', 'file'].map(type => {
-          const style = getTypeStyle(type);
-          const count = type === 'all' ? items.length : items.filter(it => it.type === type).length;
-          return (
-            <button
-              key={type}
-              onClick={() => {}} // Could implement active filter logic here
-              className={`px-6 py-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 ${
-                classFilter === '' ? 'bg-white border-slate-100 hover:border-emerald-200' : 'bg-slate-50 border-transparent'
-              }`}
-            >
-              <div className={`w-8 h-8 ${style.bg} ${style.color} rounded-lg flex items-center justify-center`}>
-                <style.icon size={16} />
-              </div>
-              <span className="text-xs font-black text-slate-700 uppercase tracking-tight">{style.label}</span>
-              <span className="text-[10px] font-black bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md">{count}</span>
-            </button>
-          )
-        })}
-      </div>
-
       {/* Grid Materi */}
-      {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredItems.map(it => {
-            const style = getTypeStyle(it.type);
-            const targetClasses = ensureArray(it.targetClassIds);
-            return (
-              <div key={it.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
-                <div className={`h-24 ${style.bg} flex items-center justify-center relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                  <style.icon size={40} className={`${style.color} opacity-20 group-hover:scale-125 transition-transform duration-700`} />
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                    <button onClick={() => { setForm({...it, targetClassIds: ensureArray(it.targetClassIds)}); setShowModal(true); }} className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white shadow-xl transition-all"><Edit size={14}/></button>
-                    <button onClick={() => handleDelete(it.id, it.title)} className="p-2.5 bg-white text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white shadow-xl transition-all"><Trash2 size={14}/></button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {filteredItems.map(it => {
+          const style = getTypeStyle(it.type);
+          return (
+            <div key={it.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+               <div className={`h-32 ${style.bg} flex items-center justify-center relative overflow-hidden`}>
+                  <style.icon size={64} className={`${style.color} opacity-10 group-hover:scale-125 transition-transform duration-700`} />
+                  <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button onClick={() => { setForm(it); setShowModal(true); }} className="p-3 bg-white text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white shadow-xl transition-all"><Edit size={16}/></button>
+                    <button onClick={() => triggerConfirm("Hapus Materi?", "Materi akan hilang permanen dari akses siswa.", () => db.delete('elearning_materials', it.id).then(() => setItems(items.filter(x => x.id !== it.id))))} className="p-3 bg-white text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white shadow-xl transition-all"><Trash2 size={16}/></button>
                   </div>
-                </div>
-                <div className="p-7 flex-1 flex flex-col">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`px-2.5 py-1 ${style.bg} ${style.color} text-[8px] font-black uppercase tracking-widest rounded-lg border ${style.border}`}>
-                      {style.label}
+                  <div className="absolute top-5 left-5">
+                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-[9px] font-black text-slate-800 uppercase tracking-widest rounded-lg shadow-sm">
+                      {it.subject}
                     </span>
-                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{it.createdAt.split(',')[0]}</span>
-                  </div>
-                  <h4 className="font-black text-slate-800 text-base leading-tight mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">{it.title}</h4>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-6 line-clamp-2">{it.description}</p>
-                  
-                  <div className="mt-auto pt-5 border-t border-slate-50">
-                    <div className="flex flex-wrap gap-1.5">
-                      {targetClasses.map(cid => (
-                        <span key={cid} className="px-2.5 py-1 bg-slate-50 text-slate-400 text-[9px] font-black rounded-lg border border-slate-100">
-                          {cid}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
-          <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6">
-            <SearchX size={40} />
-          </div>
-          <h4 className="text-xl font-black text-slate-400">Tidak Menemukan Materi</h4>
-          <p className="text-slate-400 font-medium text-sm max-w-xs mt-2 italic">"{search}" tidak cocok dengan materi apa pun.</p>
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white">
-               <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100 ${form.id ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'}`}>
-                    {form.id ? <Edit size={28} /> : <Plus size={28} />}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-800 leading-none">{form.id ? 'Edit Materi' : 'Publikasi Materi'}</h3>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Sinkronisasi Cloud Informatika</p>
                   </div>
                </div>
-               <button onClick={() => setShowModal(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
-                  <X size={24} />
-               </button>
+               <div className="p-8 flex-1 flex flex-col">
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 ${style.bg} ${style.color} rounded-xl mb-4 w-fit`}>{style.label}</span>
+                  <h4 className="font-black text-slate-800 text-lg leading-tight mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">{it.title}</h4>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 mb-6 leading-relaxed">{it.description || 'Tidak ada deskripsi modul.'}</p>
+                  
+                  <div className="mt-auto pt-6 border-t border-slate-50 flex flex-wrap gap-1.5">
+                     {ensureArray(it.targetClassIds).map(cid => (
+                       <span key={cid} className="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black rounded-lg border border-slate-100 uppercase tracking-tighter">
+                          {cid}
+                       </span>
+                     ))}
+                  </div>
+               </div>
             </div>
+          );
+        })}
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-8 scrollbar-hide">
-              {/* Type Selection */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { id: 'link', icon: LinkIcon, label: 'Tautan' },
-                  { id: 'embed', icon: Youtube, label: 'Video' },
-                  { id: 'file', icon: FileText, label: 'Dokumen' }
-                ].map(type => (
-                  <button
-                    key={type.id}
-                    onClick={() => setForm({...form, type: type.id as any})}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-3xl border-2 transition-all ${
-                      form.type === type.id 
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700 shadow-inner' 
-                        : 'border-slate-100 bg-white text-slate-400 grayscale'
-                    }`}
-                  >
-                    <type.icon size={24} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{type.label}</span>
-                  </button>
-                ))}
+        {filteredItems.length === 0 && (
+           <div className="col-span-full py-32 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+              <SearchX size={64} className="mx-auto text-slate-100 mb-6" />
+              <h4 className="text-xl font-black text-slate-300 uppercase tracking-widest">Materi tidak ditemukan</h4>
+              <p className="text-slate-400 text-sm mt-2">Coba gunakan kata kunci pencarian yang lain.</p>
+           </div>
+        )}
+      </div>
+
+      {/* MODERN POPUP MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden relative border border-white/20">
+              
+              {/* Modal Header */}
+              <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white">
+                 <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-emerald-500 text-white rounded-[1.8rem] flex items-center justify-center shadow-2xl shadow-emerald-100">
+                       <Zap size={32} />
+                    </div>
+                    <div>
+                       <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none">{form.id ? 'Edit Materi' : 'Publikasi Materi'}</h3>
+                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Digital Learning Center Al Irsyad</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setShowModal(false)} className="p-4 bg-slate-50 text-slate-400 rounded-3xl hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90">
+                    <X size={28} />
+                 </button>
               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Judul Materi Pembelajaran</label>
-                  <input 
-                    value={form.title} 
-                    onChange={e => setForm({...form, title: e.target.value})} 
-                    placeholder="Contoh: Algoritma Pemrograman Dasar" 
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
-                  />
-                </div>
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-10 scrollbar-hide bg-slate-50/30">
+                 
+                 {/* Main Fields */}
+                 <div className="space-y-6">
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                         <Type size={12} /> Judul Materi Pembelajaran
+                       </label>
+                       <div className="relative group">
+                          <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                          <input 
+                            value={form.title || ''} 
+                            onChange={e => setForm({...form, title: e.target.value})} 
+                            placeholder="Contoh: Pengenalan Algoritma Dasar" 
+                            className="w-full pl-16 pr-8 py-5 bg-white border-2 border-transparent rounded-[2rem] font-black text-slate-800 outline-none focus:border-emerald-500/10 transition-all shadow-sm" 
+                          />
+                       </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deskripsi Singkat (Ringkasan)</label>
-                  <textarea 
-                    value={form.description} 
-                    onChange={e => setForm({...form, description: e.target.value})} 
-                    placeholder="Apa yang akan dipelajari siswa?" 
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner h-24 resize-none" 
-                  />
-                </div>
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                         <FileText size={12} /> Deskripsi Singkat Modul
+                       </label>
+                       <textarea 
+                         value={form.description || ''} 
+                         onChange={e => setForm({...form, description: e.target.value})} 
+                         placeholder="Tuliskan poin-poin yang akan dipelajari siswa..." 
+                         className="w-full p-8 bg-white border-2 border-transparent rounded-2xl font-bold text-slate-600 h-32 outline-none focus:border-emerald-500/10 transition-all shadow-sm leading-relaxed" 
+                       />
+                    </div>
+                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">URL Konten (Google Drive/YouTube/Canva)</label>
-                  <div className="relative group">
-                    <Globe className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                    <input 
-                      value={form.content} 
-                      onChange={e => setForm({...form, content: e.target.value})} 
-                      placeholder="https://..." 
-                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
-                    />
-                  </div>
-                </div>
+                 {/* Content Type Selector */}
+                 <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                      <Layers size={12} /> Tipe & Sumber Konten
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                       {[
+                         { id: 'link', label: 'Tautan Luar', icon: Globe, color: 'text-blue-500', bg: 'bg-blue-50' },
+                         { id: 'embed', label: 'Video/Media', icon: Youtube, color: 'text-rose-500', bg: 'bg-rose-50' },
+                         { id: 'file', label: 'Modul PDF', icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-50' }
+                       ].map(t => (
+                         <button
+                           key={t.id}
+                           onClick={() => setForm({...form, type: t.id as any})}
+                           className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 ${
+                             form.type === t.id 
+                             ? 'bg-white border-emerald-500 shadow-xl scale-105' 
+                             : 'bg-white border-transparent grayscale opacity-50 hover:grayscale-0 hover:opacity-100'
+                           }`}
+                         >
+                            <t.icon size={28} className={t.color} />
+                            <span className="text-[9px] font-black uppercase tracking-tight text-slate-600">{t.label}</span>
+                         </button>
+                       ))}
+                    </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bagikan ke Kelas</label>
-                  <div className="flex flex-wrap gap-2">
-                    {classes.map(c => {
-                      const isSelected = ensureArray(form.targetClassIds).includes(c.name);
-                      return (
-                        <button 
-                          key={c.id} 
-                          onClick={() => {
-                            const current = ensureArray(form.targetClassIds);
-                            setForm({
-                              ...form, 
-                              targetClassIds: isSelected 
-                                ? current.filter(x => x !== c.name) 
-                                : [...current, c.name]
-                            });
-                          }} 
-                          className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                            isSelected 
-                              ? 'bg-slate-900 text-white shadow-lg' 
-                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          }`}
-                        >
-                          Kelas {c.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {ensureArray(form.targetClassIds).length === 0 && (
-                     <p className="text-[10px] text-rose-500 font-bold mt-1 italic">Mohon pilih minimal satu kelas target.</p>
-                  )}
-                </div>
+                    <div className="relative group mt-4">
+                       <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                       <input 
+                         value={form.content || ''} 
+                         onChange={e => setForm({...form, content: e.target.value})} 
+                         placeholder="Tempelkan URL di sini (YouTube, Google Drive, Canva, dll)" 
+                         className="w-full pl-16 pr-8 py-5 bg-white border-2 border-transparent rounded-2xl font-bold text-emerald-600 outline-none focus:border-emerald-500/10 transition-all shadow-sm" 
+                       />
+                    </div>
+                 </div>
+
+                 {/* Target Classes Selection */}
+                 <div className="space-y-4">
+                    <div className="flex justify-between items-center ml-2">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                         <Target size={12} /> Target Rombongan Belajar
+                       </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5 p-8 bg-white rounded-2xl border border-slate-100 shadow-inner">
+                       {sortedClasses.filter(c => (currentUser.assignedClassIds || []).includes(c.name) || currentUser.username === 'admin').map(c => {
+                          const isSelected = ensureArray(form.targetClassIds).includes(c.name);
+                          return (
+                             <button 
+                                key={c.id} 
+                                onClick={() => {
+                                   const cur = ensureArray(form.targetClassIds);
+                                   setForm({...form, targetClassIds: isSelected ? cur.filter(x => x !== c.name) : [...cur, c.name]});
+                                }} 
+                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all duration-300 flex items-center gap-2 ${
+                                  isSelected 
+                                  ? 'bg-emerald-600 text-white shadow-lg scale-110' 
+                                  : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
+                                }`}
+                             >
+                               Kelas {c.name}
+                               {isSelected && <ArrowUpRight size={14} />}
+                             </button>
+                          );
+                       })}
+                       {classes.length === 0 && (
+                         <p className="text-xs font-bold text-slate-400 italic">Belum ada kelas yang dibuat Admin.</p>
+                       )}
+                    </div>
+                 </div>
+
+                 {/* Information Box */}
+                 <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100/50 flex items-start gap-4">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                       <Info size={20} />
+                    </div>
+                    <p className="text-[11px] text-emerald-700 font-bold leading-relaxed">
+                       Pastikan tautan konten yang diunggah bersifat "Public" atau "Anyone with link" agar siswa dapat mengakses materi tanpa kendala izin.
+                    </p>
+                 </div>
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-8 md:p-10 border-t border-slate-50 bg-white flex flex-col md:flex-row gap-4 shrink-0">
-               <button onClick={() => setShowModal(false)} className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
-               <button 
-                onClick={handleSave} 
-                disabled={isSaving} 
-                className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-emerald-100 hover:bg-slate-900 transition-all disabled:opacity-50"
-               >
-                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                 {isSaving ? 'Menyimpan...' : 'Simpan & Publikasikan'}
-               </button>
-            </div>
-          </div>
+              {/* Modal Footer */}
+              <div className="p-8 md:p-10 border-t border-slate-50 bg-white flex flex-col md:flex-row gap-4 shrink-0">
+                 <button 
+                   onClick={() => setShowModal(false)} 
+                   className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                 >
+                    Batal & Tutup
+                 </button>
+                 <button 
+                   onClick={handleSave} 
+                   disabled={isSaving} 
+                   className="flex-[2] py-5 bg-slate-900 text-white rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-slate-200 hover:bg-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
+                 >
+                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                   {isSaving ? "Sinkronisasi..." : (form.id ? "Perbarui Materi" : "Publikasikan Sekarang")}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

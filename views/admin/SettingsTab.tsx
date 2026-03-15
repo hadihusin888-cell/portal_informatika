@@ -139,7 +139,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                 <div className="relative group">
                   <LayoutDashboard className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
-                    value={settings.siteName} 
+                    value={settings.siteName || ''} 
                     onChange={e => setSettings({...settings, siteName: e.target.value})} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-black text-slate-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-300 outline-none transition-all shadow-inner" 
                     placeholder="Contoh: Informatika SMP Al Irsyad"
@@ -152,7 +152,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                 <div className="relative group">
                   <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
-                    value={settings.logoUrl} 
+                    value={settings.logoUrl || ''} 
                     onChange={e => setSettings({...settings, logoUrl: e.target.value})} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-bold text-slate-600 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-inner" 
                     placeholder="https://link-gambar-logo.png"
@@ -165,7 +165,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                 <div className="relative group">
                   <ImageIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
-                    value={settings.heroImageUrl} 
+                    value={settings.heroImageUrl || ''} 
                     onChange={e => setSettings({...settings, heroImageUrl: e.target.value})} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-bold text-slate-600 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-inner" 
                     placeholder="https://link-hero-image.jpg"
@@ -213,7 +213,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                 <div className="relative group">
                   <UserCog className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
-                    value={adminName} 
+                    value={adminName || ''} 
                     onChange={e => setAdminName(e.target.value)} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
                   />
@@ -225,7 +225,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                 <div className="relative group">
                   <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
-                    value={adminUsername} 
+                    value={adminUsername || ''} 
                     onChange={e => setAdminUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-black text-blue-700 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
                   />
@@ -241,7 +241,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     type={showPassword ? 'text' : 'password'}
-                    value={adminPassword} 
+                    value={adminPassword || ''} 
                     onChange={e => setAdminPassword(e.target.value)} 
                     placeholder="Biarkan kosong jika tidak ingin ganti"
                     className="w-full p-5 pl-14 pr-14 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 

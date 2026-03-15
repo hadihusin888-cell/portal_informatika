@@ -1,38 +1,30 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Loader2, Plus, Search, Filter, ClipboardList, Calendar, 
-  Edit, Trash2, CheckCircle2, X, Info, Layers, Link as LinkIcon, 
-  Youtube, FileCode, Clock, ToggleRight, ToggleLeft, School, 
-  Save, Type, MessageSquare, ChevronRight, Zap, 
-  SearchX, AlertCircle, CalendarDays, MousePointer2, PlayCircle,
-  FileText, Globe, ExternalLink, Bookmark, LayoutGrid, Target,
-  Sparkles
+  Loader2, Plus, Search, ClipboardList, Calendar, Edit, Trash2, X, Save, 
+  Globe, Youtube, FileText, Link as LinkIcon, ToggleRight, ToggleLeft,
+  Type, Hash, Target, Info, Zap, ArrowUpRight, CheckCircle2,
+  AlertCircle, LayoutList, BookOpen, SearchX
 } from 'lucide-react';
 import { db } from '../../App.tsx';
-import { Task, ClassRoom } from '../../types.ts';
+import { Task, ClassRoom, User } from '../../types.ts';
 import { notifyStudents } from '../../utils/helpers.ts';
 
 interface ManageTasksTabProps {
   triggerConfirm: any;
   classes: ClassRoom[];
+  currentUser: User;
 }
 
-const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes }) => {
+const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes, currentUser }) => {
   const [items, setItems] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [search, setSearch] = useState('');
-  const [classFilter, setClassFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [search, setSearch] = useState('');
   const [form, setForm] = useState<Partial<Task>>({ 
-    title: '', 
-    description: '', 
-    content: '', 
-    targetClassIds: [], 
-    dueDate: '', 
-    isSubmissionEnabled: true, 
-    type: 'link' 
+    title: '', description: '', content: '', targetClassIds: [], 
+    dueDate: '', isSubmissionEnabled: true, type: 'link' 
   });
 
   useEffect(() => { loadData(); }, []);
@@ -41,13 +33,17 @@ const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes
     setLoading(true);
     try {
       const saved = await db.get('elearning_tasks');
-      setItems(Array.isArray(saved) ? saved : []);
-    } catch (err) {
-      console.error("Gagal memuat tugas:", err);
-    } finally {
-      setLoading(false);
-    }
+      const all = Array.isArray(saved) ? saved : [];
+      setItems(currentUser.username === 'admin' ? all : all.filter((t: any) => t.authorId === currentUser.id));
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
+
+  const sortedClasses = useMemo(() => {
+    return [...classes].sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    );
+  }, [classes]);
 
   const ensureArray = (data: any): string[] => {
     if (Array.isArray(data)) return data;
@@ -55,339 +51,294 @@ const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes
     return [];
   };
 
-  const filteredItems = useMemo(() => items.filter(it => {
-    const targetClasses = ensureArray(it.targetClassIds);
-    const matchSearch = it.title.toLowerCase().includes(search.toLowerCase()) || 
-                        it.description.toLowerCase().includes(search.toLowerCase());
-    const matchClass = !classFilter || targetClasses.includes(classFilter);
-    return matchSearch && matchClass;
-  }), [items, search, classFilter]);
-
   const handleSave = async () => {
-    const targetClasses = ensureArray(form.targetClassIds);
-    if (!form.title || !form.dueDate || targetClasses.length === 0 || !form.content) { 
-      alert("Mohon lengkapi Judul, Tautan Tugas, Tenggat, dan minimal satu Kelas Target."); 
+    if (!form.title || !form.dueDate || !form.content || ensureArray(form.targetClassIds).length === 0) { 
+      alert("Mohon lengkapi Judul, Tenggat, Konten, dan Target Kelas."); 
       return; 
     }
     
     setIsSaving(true);
-    const isNew = !form.id;
     const newItem: Task = { 
       ...form, 
       id: form.id || `tsk_${Date.now()}`, 
-      targetClassIds: targetClasses,
+      subject: currentUser.subject || 'Informatika',
+      authorId: currentUser.id,
+      targetClassIds: ensureArray(form.targetClassIds),
       createdAt: form.createdAt || new Date().toLocaleString('id-ID'),
-      type: form.type as any || 'link',
-      title: form.title || '',
-      description: form.description || '',
-      content: form.content || '',
-      dueDate: form.dueDate || '',
-      isSubmissionEnabled: form.isSubmissionEnabled ?? true
     } as Task;
 
     try {
-      if (isNew) {
+      if (!form.id) {
         await db.add('elearning_tasks', newItem);
         setItems([newItem, ...items]);
-        await notifyStudents(newItem.targetClassIds, "Tugas Baru!", `Ada tugas baru: ${newItem.title}. Segera kerjakan sebelum tenggat!`, "task");
+        await notifyStudents(newItem.targetClassIds, `Tugas ${newItem.subject} Baru!`, `${currentUser.name} memberi tugas: ${newItem.title}`, "task");
       } else {
         await db.update('elearning_tasks', newItem.id, newItem);
         setItems(items.map(it => it.id === newItem.id ? newItem : it));
       }
       setShowModal(false);
-    } catch (err) {
-      alert("Gagal menyimpan tugas ke database.");
-    } finally {
-      setIsSaving(false);
-    }
+    } catch (err) { alert("Gagal menyimpan tugas ke cloud."); }
+    finally { setIsSaving(false); }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    triggerConfirm(
-      `Hapus Tugas?`, 
-      `Tugas "${title}" akan dihapus. Semua riwayat pengumpulan siswa untuk tugas ini juga akan hilang.`, 
-      async () => {
-        try {
-          await db.delete('elearning_tasks', id);
-          setItems(items.filter(it => it.id !== id));
-        } catch (err) {
-          alert("Gagal menghapus tugas.");
-        }
-      }
-    );
-  };
-
-  const getTaskStatus = (dueDate: string) => {
-    const now = new Date();
-    const deadline = new Date(dueDate);
-    const diffTime = deadline.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return { label: 'Kadaluarsa', color: 'text-rose-500 bg-rose-50', border: 'border-rose-100' };
-    if (diffDays <= 2) return { label: 'Segera Berakhir', color: 'text-orange-500 bg-orange-50', border: 'border-orange-100' };
-    return { label: 'Aktif', color: 'text-emerald-500 bg-emerald-50', border: 'border-emerald-100' };
-  };
-
-  const getTypeStyle = (type: string) => {
-    switch(type) {
-      case 'link': return { icon: LinkIcon, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Tautan' };
-      case 'embed': return { icon: Youtube, color: 'text-rose-500', bg: 'bg-rose-50', label: 'Interaktif' };
-      case 'file': return { icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Dokumen' };
-      default: return { icon: ClipboardList, color: 'text-slate-500', bg: 'bg-slate-50', label: 'Tugas' };
-    }
-  };
+  const filteredItems = items.filter(it => 
+    it.title.toLowerCase().includes(search.toLowerCase()) || 
+    (it.description || '').toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) return (
     <div className="py-32 flex flex-col items-center justify-center gap-4 text-black">
       <Loader2 className="animate-spin text-purple-600" size={48} />
-      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Sinkronisasi Cloud...</p>
+      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Sinkronisasi Papan Tugas...</p>
     </div>
   );
 
   return (
-    <div className="space-y-8 text-black animate-in fade-in duration-500 pb-24">
-      {/* Action Header */}
-      <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-5">
-           <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-[1.5rem] flex items-center justify-center shadow-inner">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-24 max-w-[1600px] mx-auto text-black">
+      
+      {/* Header Panel */}
+      <section className="bg-white p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex items-center gap-6 w-full md:w-auto">
+           <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
               <ClipboardList size={32} />
            </div>
            <div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Evaluasi & Tugas</h3>
-              <p className="text-slate-500 font-medium text-sm mt-1">Mengelola {items.length} instrumen penilaian informatika.</p>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">Kelola Tugas</h3>
+              <p className="text-slate-500 font-medium text-sm mt-1">Mengatur {items.length} instrumen evaluasi akademik.</p>
            </div>
         </div>
-        <div className="flex flex-wrap gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+        
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-64 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-purple-500 transition-colors" size={18} />
             <input 
-              type="text" placeholder="Cari tugas..." 
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-purple-500/20 outline-none font-bold text-sm transition-all shadow-inner"
+              type="text" 
+              placeholder="Cari judul tugas..." 
+              value={search} 
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-13 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold text-sm outline-none focus:bg-white focus:border-purple-500/10 transition-all shadow-inner"
             />
           </div>
           <button 
-            onClick={() => { 
-              setForm({ title: '', description: '', content: '', targetClassIds: [], dueDate: '', isSubmissionEnabled: true, type: 'link' }); 
-              setShowModal(true); 
-            }} 
-            className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-purple-600 active:scale-95 transition-all"
+            onClick={() => { setForm({ title: '', description: '', content: '', targetClassIds: [], dueDate: '', isSubmissionEnabled: true, type: 'link' }); setShowModal(true); }} 
+            className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-purple-600 transition-all active:scale-95"
           >
-            <Plus size={20}/> Tambah Tugas
+            <Plus size={20}/> Tugas Baru
           </button>
         </div>
       </section>
 
       {/* Grid Tugas */}
-      {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredItems.map(it => {
-            const status = getTaskStatus(it.dueDate);
-            const style = getTypeStyle(it.type);
-            const targetClasses = ensureArray(it.targetClassIds);
-            
-            return (
-              <div key={it.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
-                <div className={`h-24 ${style.bg} flex items-center justify-center relative`}>
-                  <style.icon size={40} className={`${style.color} opacity-20 group-hover:scale-125 transition-transform duration-700`} />
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                    <button onClick={() => { setForm({...it, targetClassIds: ensureArray(it.targetClassIds)}); setShowModal(true); }} className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white shadow-xl transition-all"><Edit size={14}/></button>
-                    <button onClick={() => handleDelete(it.id, it.title)} className="p-2.5 bg-white text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white shadow-xl transition-all"><Trash2 size={14}/></button>
-                  </div>
-                  <div className="absolute bottom-3 left-4">
-                     <span className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${status.color} ${status.border} bg-white/80 backdrop-blur-sm`}>
-                       {status.label}
-                     </span>
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {filteredItems.map(it => (
+          <div key={it.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+             <div className="h-32 bg-purple-50 flex items-center justify-center relative overflow-hidden">
+                <ClipboardList size={64} className="text-purple-600 opacity-10 group-hover:scale-125 transition-transform duration-700" />
+                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                  <button onClick={() => { setForm(it); setShowModal(true); }} className="p-3 bg-white text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white shadow-xl transition-all border border-slate-50"><Edit size={16}/></button>
+                  <button onClick={() => triggerConfirm("Hapus Tugas?", "Data pengumpulan siswa juga akan hilang.", () => db.delete('elearning_tasks', it.id).then(() => setItems(items.filter(x => x.id !== it.id))))} className="p-3 bg-white text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white shadow-xl transition-all border border-slate-50"><Trash2 size={16}/></button>
+                </div>
+                <div className="absolute top-5 left-5">
+                  <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-[9px] font-black text-slate-800 uppercase tracking-widest rounded-lg shadow-sm">
+                    {it.subject}
+                  </span>
+                </div>
+             </div>
+             <div className="p-8 flex-1 flex flex-col">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${it.isSubmissionEnabled ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                    {it.isSubmissionEnabled ? 'Pengumpulan Aktif' : 'Terblokir'}
+                  </span>
+                </div>
+                <h4 className="font-black text-slate-800 text-lg leading-tight mb-3 group-hover:text-purple-600 transition-colors line-clamp-2">{it.title}</h4>
+                <div className="flex items-center gap-2 text-slate-400 mb-6">
+                  <Calendar size={14} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Deadline: {it.dueDate}</span>
                 </div>
                 
-                <div className="p-7 flex-1 flex flex-col">
-                  <h4 className="font-black text-slate-800 text-base leading-tight mb-2 group-hover:text-purple-600 transition-colors line-clamp-1">{it.title}</h4>
-                  
-                  <div className="flex items-center gap-2 mb-4 text-slate-400">
-                    <CalendarDays size={12} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Tenggat: {it.dueDate}</span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-6 line-clamp-2">{it.description}</p>
-                  
-                  <div className="mt-auto pt-5 border-t border-slate-50 flex flex-wrap gap-1.5">
-                    {targetClasses.map(cid => (
-                      <span key={cid} className="px-2.5 py-1 bg-slate-50 text-slate-400 text-[9px] font-black rounded-lg border border-slate-100">
-                        {cid}
-                      </span>
-                    ))}
-                    {!it.isSubmissionEnabled && (
-                      <span className="px-2.5 py-1 bg-rose-50 text-rose-400 text-[9px] font-black rounded-lg border border-rose-100 ml-auto">
-                        Upload Mati
-                      </span>
-                    )}
-                  </div>
+                <div className="mt-auto pt-6 border-t border-slate-50 flex flex-wrap gap-1.5">
+                  {ensureArray(it.targetClassIds).map(cid => (
+                    <span key={cid} className="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black rounded-lg border border-slate-100 uppercase tracking-tighter">
+                       {cid}
+                    </span>
+                  ))}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
-          <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6">
-            <SearchX size={40} />
+             </div>
           </div>
-          <h4 className="text-xl font-black text-slate-400">Belum Ada Tugas</h4>
-          <p className="text-slate-400 font-medium text-sm max-w-xs mt-2 italic">Tambahkan tugas baru untuk mulai mengevaluasi siswa.</p>
-        </div>
-      )}
+        ))}
 
-      {/* Add/Edit Modal */}
+        {filteredItems.length === 0 && (
+           <div className="col-span-full py-32 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+              {/* Added SearchX to lucide-react imports */}
+              <SearchX size={64} className="mx-auto text-slate-100 mb-6" />
+              <h4 className="text-xl font-black text-slate-300 uppercase tracking-widest">Tugas tidak ditemukan</h4>
+           </div>
+        )}
+      </div>
+
+      {/* MODERN POPUP MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white">
-               <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-100 ${form.id ? 'bg-indigo-600 text-white' : 'bg-purple-600 text-white'}`}>
-                    {form.id ? <Edit size={28} /> : <Target size={28} />}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-800 leading-none">{form.id ? 'Edit Tugas' : 'Buat Penugasan'}</h3>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Sistem Penilaian Cloud</p>
-                  </div>
-               </div>
-               <button onClick={() => setShowModal(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
-                  <X size={24} />
-               </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-8 scrollbar-hide">
-              {/* Type Selection */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { id: 'link', icon: LinkIcon, label: 'Tautan' },
-                  { id: 'embed', icon: Youtube, label: 'Interaktif' },
-                  { id: 'file', icon: FileText, label: 'Dokumen' }
-                ].map(type => (
-                  <button
-                    key={type.id}
-                    onClick={() => setForm({...form, type: type.id as any})}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-3xl border-2 transition-all ${
-                      form.type === type.id 
-                        ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-inner' 
-                        : 'border-slate-100 bg-white text-slate-400 grayscale'
-                    }`}
-                  >
-                    <type.icon size={24} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{type.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Judul Penugasan</label>
-                  <input 
-                    value={form.title} 
-                    onChange={e => setForm({...form, title: e.target.value})} 
-                    placeholder="Contoh: Projek Mandiri Membuat Blog" 
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-purple-500 focus:bg-white transition-all shadow-inner" 
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tenggat Waktu (Deadline)</label>
-                    <div className="relative group">
-                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                      <input 
-                        type="date"
-                        value={form.dueDate} 
-                        onChange={e => setForm({...form, dueDate: e.target.value})} 
-                        className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-purple-500 focus:bg-white transition-all shadow-inner" 
-                      />
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6 overflow-hidden animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden relative border border-white/20">
+              
+              {/* Modal Header */}
+              <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between shrink-0 bg-white">
+                 <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-purple-600 text-white rounded-[1.8rem] flex items-center justify-center shadow-2xl shadow-purple-100">
+                       <Zap size={32} />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fitur Upload Siswa</label>
-                    <button 
-                      onClick={() => setForm({...form, isSubmissionEnabled: !form.isSubmissionEnabled})}
-                      className={`w-full p-5 rounded-2xl border-2 flex items-center justify-between font-black text-xs uppercase tracking-widest transition-all ${
-                        form.isSubmissionEnabled ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'
-                      }`}
-                    >
-                      {form.isSubmissionEnabled ? 'Pengumpulan Aktif' : 'Pengumpulan Mati'}
-                      {form.isSubmissionEnabled ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Instruksi Pengerjaan</label>
-                  <textarea 
-                    value={form.description} 
-                    onChange={e => setForm({...form, description: e.target.value})} 
-                    placeholder="Jelaskan langkah-langkah yang harus dilakukan siswa..." 
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-purple-500 focus:bg-white transition-all shadow-inner h-24 resize-none" 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">URL Sumber/Tugas (Link)</label>
-                  <div className="relative group">
-                    <Globe className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                    <input 
-                      value={form.content} 
-                      onChange={e => setForm({...form, content: e.target.value})} 
-                      placeholder="https://docs.google.com/..." 
-                      className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-purple-500 focus:bg-white transition-all shadow-inner" 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bagikan ke Kelas</label>
-                  <div className="flex flex-wrap gap-2">
-                    {classes.map(c => {
-                      const isSelected = ensureArray(form.targetClassIds).includes(c.name);
-                      return (
-                        <button 
-                          key={c.id} 
-                          onClick={() => {
-                            const current = ensureArray(form.targetClassIds);
-                            setForm({
-                              ...form, 
-                              targetClassIds: isSelected 
-                                ? current.filter(x => x !== c.name) 
-                                : [...current, c.name]
-                            });
-                          }} 
-                          className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                            isSelected 
-                              ? 'bg-slate-900 text-white shadow-lg' 
-                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          }`}
-                        >
-                          Kelas {c.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                    <div>
+                       <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none">{form.id ? 'Edit Penugasan' : 'Buat Tugas Baru'}</h3>
+                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Instrumen Evaluasi Al Irsyad</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setShowModal(false)} className="p-4 bg-slate-50 text-slate-400 rounded-3xl hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90">
+                    <X size={28} />
+                 </button>
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-8 md:p-10 border-t border-slate-50 bg-white flex flex-col md:flex-row gap-4 shrink-0">
-               <button onClick={() => setShowModal(false)} className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
-               <button 
-                onClick={handleSave} 
-                disabled={isSaving} 
-                className="flex-[2] py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-purple-100 hover:bg-slate-900 transition-all disabled:opacity-50"
-               >
-                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                 {isSaving ? 'Menyimpan...' : 'Simpan & Publikasikan Tugas'}
-               </button>
-            </div>
-          </div>
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-10 scrollbar-hide bg-slate-50/30">
+                 
+                 {/* Main Info */}
+                 <div className="space-y-6">
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                         <Type size={12} /> Judul / Nama Tugas
+                       </label>
+                       <div className="relative group">
+                          <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-purple-500 transition-colors" size={20} />
+                          <input 
+                            value={form.title || ''} 
+                            onChange={e => setForm({...form, title: e.target.value})} 
+                            placeholder="Contoh: Praktikum Pemrograman Web 1" 
+                            className="w-full pl-16 pr-8 py-5 bg-white border-2 border-transparent rounded-[2rem] font-black text-slate-800 outline-none focus:border-purple-500/10 transition-all shadow-sm" 
+                          />
+                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                            <Calendar size={12} /> Tenggat Pengumpulan
+                          </label>
+                          <input 
+                             type="date" 
+                             value={form.dueDate || ''} 
+                             onChange={e => setForm({...form, dueDate: e.target.value})} 
+                             className="w-full p-5 bg-white border-2 border-transparent rounded-[1.8rem] font-black text-slate-800 outline-none focus:border-purple-500/10 transition-all shadow-sm" 
+                          />
+                       </div>
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                            <Zap size={12} /> Kontrol Akses
+                          </label>
+                          <button 
+                             onClick={() => setForm({...form, isSubmissionEnabled: !form.isSubmissionEnabled})} 
+                             className={`w-full p-5 rounded-[1.8rem] border-2 transition-all flex items-center justify-between group ${
+                               form.isSubmissionEnabled 
+                               ? 'bg-emerald-50 border-emerald-500 text-emerald-600' 
+                               : 'bg-rose-50 border-rose-500 text-rose-600'
+                             }`}
+                          >
+                             <span className="text-[10px] font-black uppercase tracking-widest">
+                                {form.isSubmissionEnabled ? 'Buka Pengumpulan' : 'Tutup Pengumpulan'}
+                             </span>
+                             {form.isSubmissionEnabled ? <ToggleRight size={28}/> : <ToggleLeft size={28}/>}
+                          </button>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Instructions */}
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                      <FileText size={12} /> Instruksi & Detail Pengerjaan
+                    </label>
+                    <textarea 
+                      value={form.description || ''} 
+                      onChange={e => setForm({...form, description: e.target.value})} 
+                      placeholder="Tuliskan langkah-langkah pengerjaan tugas di sini..." 
+                      className="w-full p-8 bg-white border-2 border-transparent rounded-[2.5rem] font-bold text-slate-600 h-32 outline-none focus:border-purple-500/10 transition-all shadow-sm leading-relaxed" 
+                    />
+                 </div>
+
+                 {/* Content Link */}
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                      <LinkIcon size={12} /> Tautan Template / Sumber (Opsional)
+                    </label>
+                    <div className="relative group">
+                       <Globe className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-purple-500 transition-colors" size={20} />
+                       <input 
+                         value={form.content || ''} 
+                         onChange={e => setForm({...form, content: e.target.value})} 
+                         placeholder="Link Google Doc / YouTube / Website terkait" 
+                         className="w-full pl-16 pr-8 py-5 bg-white border-2 border-transparent rounded-[2rem] font-bold text-purple-600 outline-none focus:border-purple-500/10 transition-all shadow-sm" 
+                       />
+                    </div>
+                 </div>
+
+                 {/* Target Classes */}
+                 <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                      <Target size={12} /> Rombongan Belajar Sasaran
+                    </p>
+                    <div className="flex flex-wrap gap-2.5 p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-inner">
+                       {sortedClasses.filter(c => (currentUser.assignedClassIds || []).includes(c.name) || currentUser.username === 'admin').map(c => {
+                          const isSelected = ensureArray(form.targetClassIds).includes(c.name);
+                          return (
+                             <button 
+                                key={c.id} 
+                                onClick={() => {
+                                   const cur = ensureArray(form.targetClassIds);
+                                   setForm({...form, targetClassIds: isSelected ? cur.filter(x => x !== c.name) : [...cur, c.name]});
+                                }} 
+                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all duration-300 flex items-center gap-2 ${
+                                  isSelected 
+                                  ? 'bg-purple-600 text-white shadow-lg scale-110' 
+                                  : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
+                                }`}
+                             >
+                               Kelas {c.name}
+                               {isSelected && <ArrowUpRight size={14} />}
+                             </button>
+                          );
+                       })}
+                       {classes.length === 0 && (
+                         <p className="text-xs font-bold text-slate-400 italic">Belum ada kelas yang dibuat Admin.</p>
+                       )}
+                    </div>
+                 </div>
+
+                 <div className="p-6 bg-purple-50 rounded-[2rem] border border-purple-100/50 flex items-start gap-4">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-purple-500 shadow-sm shrink-0">
+                       <Info size={20} />
+                    </div>
+                    <p className="text-[11px] text-purple-700 font-bold leading-relaxed">
+                       Tugas yang Anda publikasikan akan langsung muncul di dashboard siswa dan mengirimkan notifikasi real-time ke akun mereka.
+                    </p>
+                 </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-8 md:p-10 border-t border-slate-50 bg-white flex flex-col md:flex-row gap-4 shrink-0">
+                 <button 
+                   onClick={() => setShowModal(false)} 
+                   className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                 >
+                    Batal
+                 </button>
+                 <button 
+                   onClick={handleSave} 
+                   disabled={isSaving} 
+                   className="flex-[2] py-5 bg-slate-900 text-white rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-slate-200 hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
+                 >
+                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                   {isSaving ? "Sinkronisasi..." : (form.id ? "Perbarui Tugas" : "Publikasikan Tugas")}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

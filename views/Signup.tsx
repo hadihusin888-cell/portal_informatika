@@ -120,7 +120,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center px-6 py-12 text-black">
-      <div className="w-full max-w-xl bg-white p-10 md:p-14 rounded-[3.5rem] shadow-2xl relative overflow-hidden border border-slate-100">
+      <div className="w-full max-w-xl bg-white p-10 md:p-14 rounded-3xl shadow-2xl relative overflow-hidden border border-slate-100">
         {loading && (
           <div className="absolute inset-0 bg-white/80 z-20 flex items-center justify-center backdrop-blur-sm">
             <Loader2 className="animate-spin text-emerald-600" size={48} />
@@ -140,7 +140,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
         </div>
 
         {error && (
-          <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-3xl flex items-center gap-4 text-rose-600 animate-in fade-in slide-in-from-top-2">
+          <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-4 text-rose-600 animate-in fade-in slide-in-from-top-2">
             <AlertCircle size={24} className="shrink-0" />
             <p className="text-xs font-black uppercase tracking-tight leading-tight">{error}</p>
           </div>
@@ -154,7 +154,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                 <input 
                   value={name} 
                   onChange={e => setName(e.target.value)} 
-                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[1.8rem] outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
+                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
                   placeholder="Nama Lengkap..." 
                   required 
                 />
@@ -164,7 +164,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                 <select 
                   value={classRoom} 
                   onChange={e => setClassRoom(e.target.value)} 
-                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[1.8rem] outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer" 
+                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer" 
                   required
                 >
                   <option value="">-- Pilih Kelas Anda --</option>
@@ -175,7 +175,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                 type="button" 
                 onClick={() => setStep(2)} 
                 disabled={!name || !classRoom}
-                className="w-full py-6 bg-slate-900 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-600 disabled:opacity-30 active:scale-[0.98] transition-all"
+                className="w-full py-6 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-600 disabled:opacity-30 active:scale-[0.98] transition-all"
               >
                 Lanjut ke Kredensial
               </button>
@@ -187,7 +187,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                 <input 
                   value={username} 
                   onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
-                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[1.8rem] outline-none font-black text-emerald-600 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
+                  className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-black text-emerald-600 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
                   placeholder="Contoh: fauzi8a" 
                   required 
                 />
@@ -201,7 +201,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                       type={showPassword ? 'text' : 'password'} 
                       value={password} 
                       onChange={e => setPassword(e.target.value)} 
-                      className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
+                      className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
                       placeholder="Minimal 6 Karakter" 
                       required 
                     />
@@ -221,7 +221,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                     type={showPassword ? 'text' : 'password'} 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
+                    className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
                     placeholder="Konfirmasi" 
                     required 
                   />

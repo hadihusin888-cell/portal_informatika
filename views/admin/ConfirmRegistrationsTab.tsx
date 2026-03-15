@@ -97,9 +97,9 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
 
   return (
     <div className="space-y-8 text-black animate-in fade-in duration-500 pb-20">
-      <section className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+      <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-5">
-           <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-[1.5rem] flex items-center justify-center shadow-inner">
+           <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner">
               <Fingerprint size={32} />
            </div>
            <div>
@@ -122,7 +122,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
       {filteredPending.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredPending.map(s => (
-            <div key={s.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center text-center relative group hover:shadow-2xl transition-all duration-300">
+            <div key={s.id} className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center text-center relative group hover:shadow-2xl transition-all duration-300">
               <img 
                 src={s.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.username}`} 
                 className="w-24 h-24 rounded-full border-4 border-slate-50 shadow-xl bg-slate-50 mb-6" 
@@ -152,7 +152,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
+        <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-20 flex flex-col items-center text-center">
           <SearchX size={48} className="text-slate-200 mb-4" />
           <h4 className="text-xl font-black text-slate-400 uppercase tracking-widest">Antrean Kosong</h4>
           <p className="text-slate-400 text-sm italic mt-2">Semua pendaftaran telah diproses.</p>
