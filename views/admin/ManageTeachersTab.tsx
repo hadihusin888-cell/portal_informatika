@@ -69,7 +69,7 @@ const ManageTeachersTab: React.FC<ManageTeachersTabProps> = ({ triggerConfirm, c
     setIsSaving(true);
     try {
       const isNew = !form.id;
-      const cleanUsername = form.username!.toLowerCase().replace(/\s/g, '');
+      const cleanUsername = form.username!.replace(/\s/g, '');
       const email = `${cleanUsername}@alirsyad.sch.id`;
 
       let userId = form.id;

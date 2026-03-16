@@ -244,7 +244,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
               </div>
 
               <h4 className="font-black text-slate-800 text-lg line-clamp-1 leading-tight">{s.name}</h4>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">@{s.username}</p>
+              <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-2">@{s.username}</p>
               
               {/* Display Password on Card */}
               <div className="mt-4 w-full p-4 bg-slate-50 rounded-2xl flex items-center justify-between gap-2 border border-slate-100 group-hover:bg-blue-50 transition-colors">
@@ -333,7 +333,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                     <Fingerprint className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                     <input 
                       value={form.username || ''} 
-                      onChange={e => setForm({...form, username: e.target.value.toLowerCase().replace(/\s/g, '')})} 
+                      onChange={e => setForm({...form, username: e.target.value.replace(/\s/g, '')})} 
                       placeholder="Username..." 
                       className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
                     />

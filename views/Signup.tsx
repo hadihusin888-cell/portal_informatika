@@ -69,7 +69,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
     }
 
     setLoading(true);
-    const cleanUsername = username.trim().toLowerCase();
+    const cleanUsername = username.trim();
     const email = `${cleanUsername}@alirsyad.sch.id`;
 
     try {
@@ -186,7 +186,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Username Baru</label>
                 <input 
                   value={username} 
-                  onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
+                  onChange={e => setUsername(e.target.value.replace(/\s/g, ''))} 
                   className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-black text-emerald-600 focus:border-emerald-500 focus:bg-white transition-all shadow-inner" 
                   placeholder="Contoh: fauzi8a" 
                   required 

@@ -79,7 +79,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
     setError({message: ''});
     setLoading(true);
 
-    const cleanUsername = username.trim().toLowerCase();
+    const cleanUsername = username.trim();
     const email = `${cleanUsername}@alirsyad.sch.id`;
 
     try {

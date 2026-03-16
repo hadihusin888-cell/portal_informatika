@@ -166,7 +166,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Username (Login ID)</label>
-                <input value={username || ''} onChange={e => setUsername(e.target.value.toLowerCase())} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all" />
+                <input value={username || ''} onChange={e => setUsername(e.target.value)} className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Ganti Password (Opsional)</label>

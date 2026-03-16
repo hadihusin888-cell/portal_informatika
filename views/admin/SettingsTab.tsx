@@ -226,7 +226,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                   <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
                   <input 
                     value={adminUsername || ''} 
-                    onChange={e => setAdminUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
+                    onChange={e => setAdminUsername(e.target.value.replace(/\s/g, ''))} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-black text-blue-700 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
                   />
                 </div>
