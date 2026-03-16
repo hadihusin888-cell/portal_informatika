@@ -101,7 +101,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
         `${name} (Kelas ${classRoom}) telah mendaftar. Mohon segera verifikasi akun tersebut.`
       );
       
-      alert("Pendaftaran Berhasil! Akun Anda sedang menunggu konfirmasi Guru Informatika.");
+      alert("Pendaftaran Berhasil! Akun Anda sedang menunggu konfirmasi Guru.");
       
       // Tunggu sejenak sebelum sign out agar auth listener di App.tsx tidak crash
       await new Promise(r => setTimeout(r, 500));
@@ -136,7 +136,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h3 className="text-4xl font-black text-slate-900 tracking-tight">Registrasi Cloud</h3>
-          <p className="text-slate-400 font-bold text-sm italic">Siswa Informatika SMP Al Irsyad Surakarta</p>
+          <p className="text-slate-400 font-bold text-sm italic">Siswa Digital SMP Al Irsyad Surakarta</p>
         </div>
 
         {error && (

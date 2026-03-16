@@ -61,7 +61,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
         activatedAt: new Date().toISOString()
       });
       
-      await notifyStudents([], "Akun Aktif!", "Selamat, pendaftaran Anda telah disetujui Guru Informatika. Silakan login.", "registration", student.id);
+      await notifyStudents([], "Akun Aktif!", "Selamat, pendaftaran Anda telah disetujui Guru. Silakan login.", "registration", student.id);
     } catch (err) {
       console.error("Gagal aktivasi:", err);
       alert("Gagal mengaktifkan akun. Mohon periksa koneksi atau Izin Firestore.");

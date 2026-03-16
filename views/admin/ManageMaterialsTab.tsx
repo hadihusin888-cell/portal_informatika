@@ -65,7 +65,7 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
     const newItem: Material = { 
       ...form, 
       id: form.id || `mat_${Date.now()}`, 
-      subject: currentUser.subject || 'Informatika',
+      subject: currentUser.subject || 'Digital',
       authorId: currentUser.id,
       targetClassIds: ensureArray(form.targetClassIds),
       createdAt: form.createdAt || new Date().toLocaleString('id-ID'),

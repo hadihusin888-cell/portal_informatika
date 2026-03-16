@@ -59,7 +59,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
             </div>
             <h2 className="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] tracking-tighter">
               Transformasi Belajar <br/> 
-              <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent italic">Digital Informatika.</span>
+              <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent italic">Digital Teknologi.</span>
             </h2>
             <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
               Platform eksklusif SMP Al Irsyad Surakarta untuk menguasai teknologi masa depan melalui pembelajaran yang interaktif dan berbasis cloud.
@@ -112,7 +112,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-24 space-y-4">
             <h3 className="text-sm font-black text-emerald-600 uppercase tracking-[0.4em]">Inovasi Digital</h3>
-            <h2 className="text-5xl font-black text-slate-900 tracking-tight">Kurikulum Informatika Terbaik</h2>
+            <h2 className="text-5xl font-black text-slate-900 tracking-tight">Kurikulum Digital Terbaik</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
@@ -164,7 +164,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
               alt="Logo SMP Al Irsyad" 
               className="h-16 w-auto object-contain" 
             />
-            <span className="text-2xl font-black text-white tracking-tighter italic">AL IRSYAD <span className="text-emerald-500">INFORMATIKA</span></span>
+            <span className="text-2xl font-black text-white tracking-tighter italic">AL IRSYAD <span className="text-emerald-500">SURAKARTA</span></span>
           </div>
           <div className="h-[1px] w-full max-w-md bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
           <p className="text-sm font-medium">© 2026 SMP AL Irsyad Surakarta. Membangun Generasi Literat Teknologi.</p>

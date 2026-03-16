@@ -268,7 +268,7 @@ const Layout: React.FC<LayoutProps> = ({
                       alt=""
                     />
                     <h5 className="text-xs md:text-sm font-black text-slate-900">{user.name}</h5>
-                    <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Informatika</p>
+                    <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Digital</p>
                   </div>
                   
                   <div className="p-2 md:p-3 space-y-1">

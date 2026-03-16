@@ -142,7 +142,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                     value={settings.siteName || ''} 
                     onChange={e => setSettings({...settings, siteName: e.target.value})} 
                     className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-black text-slate-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-300 outline-none transition-all shadow-inner" 
-                    placeholder="Contoh: Informatika SMP Al Irsyad"
+                    placeholder="Contoh: Digital SMP Al Irsyad"
                   />
                 </div>
               </div>

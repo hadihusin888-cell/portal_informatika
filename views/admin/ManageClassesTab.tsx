@@ -111,7 +111,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
             </div>
             <div>
               <h3 className="text-3xl font-black text-slate-800 tracking-tight">Manajemen Kelas</h3>
-              <p className="text-slate-500 font-medium text-sm mt-1">Mengatur {classes.length} kelompok belajar Informatika.</p>
+              <p className="text-slate-500 font-medium text-sm mt-1">Mengatur {classes.length} kelompok belajar Digital.</p>
             </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
@@ -212,7 +212,7 @@ const ManageClassesTab: React.FC<ManageClassesTabProps> = ({ triggerConfirm, cla
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-slate-800 leading-none">{form.id ? 'Edit Informasi Kelas' : 'Buat Kelas Baru'}</h3>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Sinkronisasi Struktur Organisasi Informatika</p>
+                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Sinkronisasi Struktur Organisasi Digital</p>
                   </div>
                </div>
                <button onClick={() => setShowModal(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">

@@ -141,7 +141,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>({
     logoUrl: 'https://www.alirsyad.or.id/wp-content/uploads/download/alirsyad-alislamiyyah.png',
     heroImageUrl: 'https://media.vitecoelearning.eu/vitecoelearning.eu/wp-content/uploads/2023/09/e-learning-1-fb-EN.jpg',
-    siteName: 'Informatika SMP Al Irsyad Surakarta'
+    siteName: 'Digital SMP Al Irsyad Surakarta'
   });
 
   useEffect(() => {
@@ -171,7 +171,7 @@ const App: React.FC = () => {
                 setUser(null);
                 setView('login');
                 setLoginRole('STUDENT');
-                alert("Akses Ditolak: Akun Anda sedang menunggu verifikasi Guru Informatika.");
+                alert("Akses Ditolak: Akun Anda sedang menunggu verifikasi Guru.");
               }
             }
           } else {

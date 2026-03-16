@@ -61,7 +61,7 @@ const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes
     const newItem: Task = { 
       ...form, 
       id: form.id || `tsk_${Date.now()}`, 
-      subject: currentUser.subject || 'Informatika',
+      subject: currentUser.subject || 'Digital',
       authorId: currentUser.id,
       targetClassIds: ensureArray(form.targetClassIds),
       createdAt: form.createdAt || new Date().toLocaleString('id-ID'),

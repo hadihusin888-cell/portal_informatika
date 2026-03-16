@@ -55,7 +55,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
       // Menggunakan foto yang diunggah sebagai avatar default admin
       const adminData: User = {
         id: firebaseUser.uid,
-        name: "Admin Utama Informatika",
+        name: "Admin Utama Digital",
         username: adminUsername,
         role: 'ADMIN',
         status: 'ACTIVE',
@@ -99,7 +99,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
 
         if (userData.role === 'STUDENT' && userData.status !== 'ACTIVE') {
           await signOut(auth);
-          setError({message: "Akun Anda sedang menunggu verifikasi Guru Informatika."});
+          setError({message: "Akun Anda sedang menunggu verifikasi Guru."});
           return;
         }
       } else {
@@ -124,7 +124,7 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
             <h2 className="text-6xl font-black leading-tight tracking-tighter">
               Portal Cloud<br/>
               <span className={isAdmin ? 'text-emerald-400 italic' : 'text-blue-200 italic'}>
-                {isAdmin ? 'Guru / Admin' : 'Siswa Informatika'}
+                {isAdmin ? 'Guru / Admin' : 'Siswa Digital'}
               </span>
             </h2>
             <p className="text-xl text-white/70 font-medium leading-relaxed">
