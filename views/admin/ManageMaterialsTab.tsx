@@ -102,10 +102,41 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
     it.description.toLowerCase().includes(search.toLowerCase())
   );
 
+  const groupedItems = useMemo(() => {
+    const groups: { [key: string]: Material[] } = {
+      'Kelas 7': [],
+      'Kelas 8': [],
+      'Kelas 9': [],
+      'Lainnya': []
+    };
+
+    filteredItems.forEach(item => {
+      const targetClasses = ensureArray(item.targetClassIds);
+      const levels = new Set<string>();
+      
+      targetClasses.forEach(c => {
+        if (c.startsWith('7')) levels.add('Kelas 7');
+        else if (c.startsWith('8')) levels.add('Kelas 8');
+        else if (c.startsWith('9')) levels.add('Kelas 9');
+        else levels.add('Lainnya');
+      });
+
+      if (levels.size === 0) {
+        groups['Lainnya'].push(item);
+      } else {
+        levels.forEach(level => {
+          groups[level].push(item);
+        });
+      }
+    });
+
+    return groups;
+  }, [filteredItems]);
+
   if (loading) return <div className="py-32 flex flex-col items-center justify-center gap-4 text-black"><Loader2 className="animate-spin text-emerald-600" size={48} /><p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Memuat Pustaka Materi...</p></div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-24 max-w-[1600px] mx-auto text-black">
+    <div className="space-y-12 animate-in fade-in duration-500 pb-24 max-w-[1600px] mx-auto text-black">
       
       {/* Header Panel */}
       <section className="bg-white p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-8">
@@ -139,49 +170,61 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
         </div>
       </section>
 
-      {/* Grid Materi */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {filteredItems.map(it => {
-          const style = getTypeStyle(it.type);
-          return (
-            <div key={it.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
-               <div className={`h-32 ${style.bg} flex items-center justify-center relative overflow-hidden`}>
-                  <style.icon size={64} className={`${style.color} opacity-10 group-hover:scale-125 transition-transform duration-700`} />
-                  <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={() => { setForm(it); setShowModal(true); }} className="p-3 bg-white text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white shadow-xl transition-all"><Edit size={16}/></button>
-                    <button onClick={() => triggerConfirm("Hapus Materi?", "Materi akan hilang permanen dari akses siswa.", () => db.delete('elearning_materials', it.id).then(() => setItems(items.filter(x => x.id !== it.id))))} className="p-3 bg-white text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white shadow-xl transition-all"><Trash2 size={16}/></button>
-                  </div>
-                  <div className="absolute top-5 left-5">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-[9px] font-black text-slate-800 uppercase tracking-widest rounded-lg shadow-sm">
-                      {it.subject}
-                    </span>
-                  </div>
-               </div>
-               <div className="p-8 flex-1 flex flex-col">
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 ${style.bg} ${style.color} rounded-xl mb-4 w-fit`}>{style.label}</span>
-                  <h4 className="font-black text-slate-800 text-lg leading-tight mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">{it.title}</h4>
-                  <p className="text-xs text-slate-400 font-medium line-clamp-2 mb-6 leading-relaxed">{it.description || 'Tidak ada deskripsi modul.'}</p>
-                  
-                  <div className="mt-auto pt-6 border-t border-slate-50 flex flex-wrap gap-1.5">
-                     {ensureArray(it.targetClassIds).map(cid => (
-                       <span key={cid} className="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black rounded-lg border border-slate-100 uppercase tracking-tighter">
-                          {cid}
-                       </span>
-                     ))}
-                  </div>
-               </div>
+      {/* Grouped Sections */}
+      {(Object.entries(groupedItems) as [string, Material[]][]).map(([level, levelItems]) => {
+        if (levelItems.length === 0) return null;
+        
+        return (
+          <section key={level} className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h4 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">{level}</h4>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{levelItems.length} Materi</span>
             </div>
-          );
-        })}
 
-        {filteredItems.length === 0 && (
-           <div className="col-span-full py-32 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
-              <SearchX size={64} className="mx-auto text-slate-100 mb-6" />
-              <h4 className="text-xl font-black text-slate-300 uppercase tracking-widest">Materi tidak ditemukan</h4>
-              <p className="text-slate-400 text-sm mt-2">Coba gunakan kata kunci pencarian yang lain.</p>
-           </div>
-        )}
-      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {levelItems.map(it => {
+                const style = getTypeStyle(it.type);
+                return (
+                  <div key={`${level}-${it.id}`} className="bg-white rounded-xl border border-slate-100 p-4 flex flex-col group hover:border-emerald-500/30 transition-all duration-300">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`w-8 h-8 ${style.bg} ${style.color} rounded-lg flex items-center justify-center`}>
+                        <style.icon size={16} />
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={() => { setForm(it); setShowModal(true); }} className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors"><Edit size={14}/></button>
+                        <button onClick={() => triggerConfirm("Hapus Materi?", "Materi akan hilang permanen.", () => db.delete('elearning_materials', it.id).then(() => setItems(items.filter(x => x.id !== it.id))))} className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"><Trash2 size={14}/></button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1 group-hover:text-emerald-600 transition-colors line-clamp-1">{it.title}</h4>
+                      <p className="text-[10px] text-slate-400 font-medium line-clamp-1 mb-3">{it.description || 'Tidak ada deskripsi.'}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
+                      <div className="flex flex-wrap gap-1">
+                        {ensureArray(it.targetClassIds).slice(0, 2).map(cid => (
+                          <span key={cid} className="text-[8px] font-black text-slate-300 uppercase">{cid}</span>
+                        ))}
+                        {ensureArray(it.targetClassIds).length > 2 && <span className="text-[8px] font-black text-slate-300">...</span>}
+                      </div>
+                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-tighter">{it.subject}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+
+      {filteredItems.length === 0 && (
+        <div className="py-32 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+          <SearchX size={64} className="mx-auto text-slate-100 mb-6" />
+          <h4 className="text-xl font-black text-slate-300 uppercase tracking-widest">Materi tidak ditemukan</h4>
+          <p className="text-slate-400 text-sm mt-2">Coba gunakan kata kunci pencarian yang lain.</p>
+        </div>
+      )}
 
       {/* MODERN POPUP MODAL */}
       {showModal && (
