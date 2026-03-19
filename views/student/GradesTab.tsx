@@ -13,7 +13,7 @@ interface GradesTabProps {
   submissions: Submission[];
 }
 
-const GradesTab: React.FC<GradesTabProps> = ({ tasks, submissions }) => {
+const GradesTab: React.FC<GradesTabProps> = ({ tasks = [], submissions = [] }) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'graded' | 'pending'>('all');
   const [subjectFilter, setSubjectFilter] = useState('all');

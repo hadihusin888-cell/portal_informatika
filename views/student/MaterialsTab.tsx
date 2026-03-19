@@ -14,7 +14,7 @@ interface MaterialsTabProps {
   initialSubject?: string;
 }
 
-const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }) => {
+const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubject }) => {
   const [search, setSearch] = useState('');
   const [activeTypeFilter, setActiveTypeFilter] = useState('all');
   const [subjectFilter, setSubjectFilter] = useState(initialSubject || 'all');
@@ -29,7 +29,7 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }
       try {
         const allUsers = await db.get('users');
         const teachers = Array.isArray(allUsers) ? allUsers.filter((u: any) => u.role === 'ADMIN' && u.subject) : [];
-        const subjects = Array.from(new Set(teachers.map((t: any) => t.subject)));
+        const subjects = Array.from(new Set(teachers.map((t: any) => t.subject))).filter(Boolean);
         setAvailableSubjects(subjects as string[]);
       } catch (err) {
         console.error("Gagal memuat daftar mapel:", err);
@@ -82,6 +82,31 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }
     return embedUrl;
   };
 
+  const getSubjectColor = (subject: string) => {
+    const defaultColor = { bg: 'bg-slate-50', text: 'text-slate-600', active: 'bg-slate-600', border: 'border-slate-100' };
+    if (!subject) return defaultColor;
+
+    const colors = [
+      { bg: 'bg-rose-50', text: 'text-rose-600', active: 'bg-rose-600', border: 'border-rose-100' },
+      { bg: 'bg-blue-50', text: 'text-blue-600', active: 'bg-blue-600', border: 'border-blue-100' },
+      { bg: 'bg-emerald-50', text: 'text-emerald-600', active: 'bg-emerald-600', border: 'border-emerald-100' },
+      { bg: 'bg-amber-50', text: 'text-amber-600', active: 'bg-amber-600', border: 'border-amber-100' },
+      { bg: 'bg-purple-50', text: 'text-purple-600', active: 'bg-purple-600', border: 'border-purple-100' },
+      { bg: 'bg-indigo-50', text: 'text-indigo-600', active: 'bg-indigo-600', border: 'border-indigo-100' },
+      { bg: 'bg-cyan-50', text: 'text-cyan-600', active: 'bg-cyan-600', border: 'border-cyan-100' },
+      { bg: 'bg-pink-50', text: 'text-pink-600', active: 'bg-pink-600', border: 'border-pink-100' },
+      { bg: 'bg-orange-50', text: 'text-orange-600', active: 'bg-orange-600', border: 'border-orange-100' },
+      { bg: 'bg-teal-50', text: 'text-teal-600', active: 'bg-teal-600', border: 'border-teal-100' },
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < subject.length; i++) {
+      hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
+
   return (
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-700 text-black pb-24 max-w-[1600px] mx-auto">
       
@@ -124,20 +149,23 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }
                 >
                   Semua Mapel
                 </button>
-                {availableSubjects.map(sub => (
-                  <button
-                    key={sub}
-                    onClick={() => setSubjectFilter(sub)}
-                    className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
-                      subjectFilter === sub 
-                      ? 'bg-indigo-600 text-white shadow-lg scale-105' 
-                      : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100'
-                    }`}
-                  >
-                    {sub}
-                    {subjectFilter === sub && <CheckCircle2 size={12} />}
-                  </button>
-                ))}
+                {availableSubjects.map(sub => {
+                  const subColor = getSubjectColor(sub);
+                  return (
+                    <button
+                      key={sub}
+                      onClick={() => setSubjectFilter(sub)}
+                      className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
+                        subjectFilter === sub 
+                        ? `${subColor.active} text-white shadow-lg scale-105` 
+                        : `${subColor.bg} ${subColor.text} border ${subColor.border} hover:brightness-95`
+                      }`}
+                    >
+                      {sub}
+                      {subjectFilter === sub && <CheckCircle2 size={12} />}
+                    </button>
+                  );
+                })}
                 {loadingSubjects && <div className="px-4 py-3 animate-pulse bg-slate-50 rounded-2xl w-24 h-10"></div>}
               </div>
            </div>
@@ -181,7 +209,7 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }
               <div className={`h-32 ${style.bg} relative flex items-center justify-center overflow-hidden`}>
                 <Icon size={56} className={`${style.text} opacity-10 group-hover:scale-125 transition-transform duration-700`} />
                 <div className="absolute top-5 left-5">
-                   <span className="px-4 py-1.5 bg-white/95 backdrop-blur-sm text-[9px] font-black text-slate-800 uppercase tracking-widest rounded-xl shadow-sm border border-slate-100">
+                   <span className={`px-4 py-1.5 ${getSubjectColor(m.subject).bg} ${getSubjectColor(m.subject).text} backdrop-blur-sm text-[9px] font-black uppercase tracking-widest rounded-xl shadow-sm border ${getSubjectColor(m.subject).border}`}>
                       {m.subject}
                    </span>
                 </div>
@@ -239,7 +267,7 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials, initialSubject }
                   <div className="min-w-0">
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none">{selectedMaterial.title}</h3>
                     <div className="flex items-center gap-3 mt-3">
-                       <span className="text-indigo-600 font-black text-[10px] uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">{selectedMaterial.subject}</span>
+                       <span className={`${getSubjectColor(selectedMaterial.subject).text} font-black text-[10px] uppercase tracking-widest ${getSubjectColor(selectedMaterial.subject).bg} px-3 py-1 rounded-lg border ${getSubjectColor(selectedMaterial.subject).border}`}>{selectedMaterial.subject}</span>
                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
                          <Globe size={12} /> E-Learning Al Irsyad Surakarta

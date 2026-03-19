@@ -16,7 +16,7 @@ interface HomeTabProps {
   setSelectedSubjectFilter?: (subject: string) => void;
 }
 
-const HomeTab: React.FC<HomeTabProps> = ({ user, materials, tasks, submissions = [], setActiveView, setSelectedSubjectFilter }) => {
+const HomeTab: React.FC<HomeTabProps> = ({ user, materials = [], tasks = [], submissions = [], setActiveView, setSelectedSubjectFilter }) => {
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
   // Daftar tema warna untuk kartu mata pelajaran

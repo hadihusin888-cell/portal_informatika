@@ -19,7 +19,7 @@ interface TasksTabProps {
   onRefresh: () => void;
 }
 
-const TasksTab: React.FC<TasksTabProps> = ({ user, tasks, submissions, onRefresh }) => {
+const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [], onRefresh }) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [link, setLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
