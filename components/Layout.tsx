@@ -126,7 +126,7 @@ const Layout: React.FC<LayoutProps> = ({
       <aside className="w-20 hover:w-72 bg-white border-r border-slate-200 hidden md:flex flex-col sticky top-0 h-screen transition-all duration-300 group z-50 overflow-hidden">
         <div className="p-6 flex flex-col gap-4 overflow-hidden">
           <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain self-start transition-all duration-300 group-hover:h-14" />
-          <span className="font-black text-slate-800 text-[10px] leading-tight opacity-0 group-hover:opacity-40 uppercase tracking-[0.3em] transition-opacity duration-300 whitespace-nowrap">{siteName}</span>
+          <span className="font-black text-slate-800 text-[10px] leading-tight opacity-0 group-hover:opacity-40 uppercase tracking-[0.1em] transition-opacity duration-300 whitespace-normal break-words">{siteName}</span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-hide">

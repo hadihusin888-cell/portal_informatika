@@ -141,7 +141,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>({
     logoUrl: 'https://www.alirsyad.or.id/wp-content/uploads/download/alirsyad-alislamiyyah.png',
     heroImageUrl: 'https://media.vitecoelearning.eu/vitecoelearning.eu/wp-content/uploads/2023/09/e-learning-1-fb-EN.jpg',
-    siteName: 'Digital SMP Al Irsyad Surakarta'
+    siteName: 'e-learning SMP AL IRSYAD SURAKARTA'
   });
 
   useEffect(() => {

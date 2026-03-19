@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, User as UserIcon, Eye, EyeOff, AlertCircle, RefreshCw, ShieldCheck, GraduationCap, Laptop, X, Send, Mail } from 'lucide-react';
 import { Role, User } from '../types';
 import { auth, firestore } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence, browserLocalPersistence } from "firebase/auth";
 import { doc, getDoc, getDocs, collection, setDoc, query, where, limit } from "firebase/firestore";
 
 interface LoginProps {
@@ -83,6 +83,11 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
     const email = `${cleanUsername}@alirsyad.sch.id`;
 
     try {
+      // Set persistence based on role: Students use session persistence (logout on browser close)
+      // while Admins use local persistence (stay logged in).
+      const persistence = role === 'STUDENT' ? browserSessionPersistence : browserLocalPersistence;
+      await setPersistence(auth, persistence);
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
