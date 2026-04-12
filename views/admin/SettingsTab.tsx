@@ -3,7 +3,7 @@ import {
   Globe, LayoutDashboard, Link as LinkIcon, Image as ImageIcon, 
   Shield, UserCog, Lock, User as UserIcon, EyeOff, Eye, 
   Loader2, Save, Sparkles, Database,
-  CheckCircle2, Info, RefreshCw
+  CheckCircle2, Info, RefreshCw, Camera, Upload
 } from 'lucide-react';
 import { db } from '../../App';
 import { SiteSettings, User } from '../../types';
@@ -32,6 +32,23 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
   const randomizeAvatar = () => {
     const randomSeed = Math.random().toString(36).substring(2, 10);
     setPreviewAvatar(`https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validasi ukuran file (maksimal 1MB)
+    if (file.size > 1024 * 1024) {
+      alert("Ukuran foto terlalu besar. Maksimal 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewAvatar(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
@@ -196,16 +213,28 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
                     className="w-24 h-24 rounded-full border-4 border-white shadow-xl bg-white mb-4 object-cover" 
                     alt="Admin Avatar"
                   />
-                  <button 
-                    onClick={randomizeAvatar}
-                    className="absolute bottom-4 right-0 p-2 bg-emerald-600 text-white rounded-xl shadow-lg border-2 border-white hover:bg-slate-900 transition-all active:scale-90"
-                    title="Acak Avatar"
-                  >
-                    <RefreshCw size={14} />
-                  </button>
+                  <div className="absolute bottom-4 right-0 flex gap-1">
+                    <button 
+                      onClick={randomizeAvatar}
+                      className="p-2 bg-white text-slate-400 rounded-xl shadow-lg border border-slate-100 hover:text-emerald-600 transition-all active:scale-90"
+                      title="Acak Avatar"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                    <label className="p-2 bg-emerald-600 text-white rounded-xl shadow-lg border-2 border-white hover:bg-slate-900 transition-all active:scale-90 cursor-pointer flex items-center justify-center">
+                      <Camera size={14} />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
                 </div>
                 <h4 className="font-black text-slate-800">{adminName || 'Nama Guru'}</h4>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Administrator Cloud</p>
+                <p className="text-[8px] font-bold text-slate-300 uppercase mt-2">Maksimal Foto: 1MB</p>
               </div>
 
               <div className="space-y-3">

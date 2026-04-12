@@ -4,7 +4,8 @@ import {
   Loader2, UserPlus2, Search, Edit, Trash2, X, Save, 
   Briefcase, School, ShieldCheck, Lock, Eye, EyeOff,
   SearchX, CheckCircle, GraduationCap, Mail,
-  User as UserIcon, Fingerprint, Info, Zap, ArrowUpRight
+  User as UserIcon, Fingerprint, Info, Zap, ArrowUpRight,
+  Camera, RefreshCw
 } from 'lucide-react';
 import { auth, firestore } from '../../firebase';
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -59,6 +60,27 @@ const ManageTeachersTab: React.FC<ManageTeachersTabProps> = ({ triggerConfirm, c
       a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
     );
   }, [classes]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+      alert("Ukuran foto terlalu besar. Maksimal 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm({ ...form, avatar: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const randomizeAvatar = () => {
+    const randomSeed = Math.random().toString(36).substring(2, 10);
+    setForm({ ...form, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}` });
+  };
 
   const handleSave = async () => {
     if (!form.name || !form.username || (!form.id && !form.password) || !form.subject) {
@@ -220,6 +242,36 @@ const ManageTeachersTab: React.FC<ManageTeachersTabProps> = ({ triggerConfirm, c
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-10 scrollbar-hide bg-slate-50/30">
               
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center py-8 bg-white rounded-3xl border border-slate-100 shadow-sm relative group/avatar">
+                <div className="relative">
+                  <img 
+                    src={form.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username || 'default'}`} 
+                    className="w-28 h-28 rounded-full border-4 border-white shadow-xl bg-slate-50 mb-4 object-cover" 
+                    alt="Teacher Avatar"
+                  />
+                  <div className="absolute bottom-4 right-0 flex gap-1">
+                    <button 
+                      onClick={randomizeAvatar}
+                      className="p-2 bg-white text-slate-400 rounded-xl shadow-lg border border-slate-100 hover:text-indigo-600 transition-all active:scale-90"
+                      title="Acak Avatar"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                    <label className="p-2 bg-indigo-600 text-white rounded-xl shadow-lg border-2 border-white hover:bg-slate-900 transition-all active:scale-90 cursor-pointer flex items-center justify-center">
+                      <Camera size={14} />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Foto Profil Guru (Maks 1MB)</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
