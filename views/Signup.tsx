@@ -83,7 +83,7 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
 
       const userData: User = {
         id: firebaseUser.uid,
-        name,
+        name: name.toUpperCase(),
         username: cleanUsername,
         classId: classRoom,
         role: 'STUDENT',

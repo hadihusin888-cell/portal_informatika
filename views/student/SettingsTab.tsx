@@ -83,7 +83,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ user, onUpdateUser }) => {
       // Update data di Firestore
       const updatedUser: User = { 
         ...user, 
-        name,
+        name: name.toUpperCase(),
         username: authError && username !== user.username ? user.username : username, 
         avatar: previewAvatar,
         // SINKRONISASI: Simpan password baru ke Firestore agar Admin bisa lihat

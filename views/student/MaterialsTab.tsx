@@ -75,9 +75,16 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
       embedUrl = 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1];
     } else if (url.includes('docs.google.com')) {
       embedUrl = url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`;
+    } else if (url.includes('drive.google.com/file/d/')) {
+      // Handle Google Drive file preview
+      embedUrl = url.replace('/view', '/preview').replace('/edit', '/preview');
     } else if (url.includes('canva.com/design/')) {
       const baseUrl = url.split('?')[0];
       embedUrl = baseUrl.includes('/view') ? `${baseUrl}?embed` : `${baseUrl}/view?embed`;
+    } else if (url.includes('wordwall.net/resource/')) {
+      embedUrl = url.replace('wordwall.net/resource/', 'wordwall.net/embed/resource/');
+    } else if (url.toLowerCase().endsWith('.pdf')) {
+      embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
     }
     return embedUrl;
   };
@@ -222,12 +229,23 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
                 <p className="text-sm text-slate-500 font-medium mb-8 line-clamp-3 leading-relaxed opacity-70">
                   {m.description || 'Pelajari modul ini untuk memperdalam pemahaman mata pelajaran.'}
                 </p>
-                <button 
-                  onClick={() => setSelectedMaterial(m)}
-                  className="mt-auto w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
-                >
-                  Buka Modul <ChevronRight size={18}/>
-                </button>
+                <div className="flex gap-2 mt-auto">
+                  <button 
+                    onClick={() => setSelectedMaterial(m)}
+                    className="flex-[2] py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
+                  >
+                    Buka Modul <ChevronRight size={18}/>
+                  </button>
+                  <a 
+                    href={m.content} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center shadow-inner border border-slate-100"
+                    title="Buka di Tab Baru"
+                  >
+                    <ExternalLink size={18} />
+                  </a>
+                </div>
               </div>
             </div>
           );
@@ -286,24 +304,62 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
                      <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center">
                         <Info size={20} />
                      </div>
-                     <p className="text-xs font-bold text-slate-600 leading-relaxed max-w-lg">
-                       Materi dimuat dari server eksternal. Gunakan fitur "Buka di Tab Baru" jika tampilan modul tidak maksimal pada layar Anda.
-                     </p>
+                     <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-600 leading-relaxed line-clamp-1">
+                          {selectedMaterial.content}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          Gunakan fitur "Buka di Tab Baru" jika tampilan modul tidak maksimal pada layar Anda.
+                        </p>
+                     </div>
                   </div>
-                  <a href={selectedMaterial.content} target="_blank" rel="noreferrer" className="w-full md:w-auto px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl flex items-center justify-center gap-2">
-                    Buka di Tab Baru <ArrowUpRight size={14} />
-                  </a>
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedMaterial.content);
+                        alert("Tautan berhasil disalin!");
+                      }}
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                    >
+                      Salin Tautan
+                    </button>
+                    <a href={selectedMaterial.content} target="_blank" rel="noreferrer" className="flex-1 md:flex-none px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl flex items-center justify-center gap-2">
+                      Buka di Tab Baru <ArrowUpRight size={14} />
+                    </a>
+                  </div>
                </div>
 
-               <div className="flex-1 w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-white">
-                  <iframe 
-                    src={getEmbedUrl(selectedMaterial.content)} 
-                    className="w-full h-full border-0" 
-                    allowFullScreen 
-                    title="Material View"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  ></iframe>
+               <div className="flex-1 w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-white relative group">
+                  {selectedMaterial.type === 'link' && !['youtube', 'youtu.be', 'docs.google', 'drive.google', 'canva', 'wordwall'].some(p => selectedMaterial.content.includes(p)) ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center space-y-6 bg-slate-50">
+                      <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center text-indigo-500">
+                        <Globe size={48} />
+                      </div>
+                      <div className="max-w-md space-y-2">
+                        <h4 className="text-xl font-black text-slate-800 uppercase tracking-tight">Tautan Luar Terdeteksi</h4>
+                        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                          Tautan ini mungkin tidak dapat ditampilkan langsung di dalam website karena kebijakan keamanan situs tujuan. Silakan klik tombol di bawah untuk membukanya.
+                        </p>
+                      </div>
+                      <a 
+                        href={selectedMaterial.content} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="px-10 py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-2xl flex items-center gap-3"
+                      >
+                        Kunjungi Situs <ExternalLink size={18} />
+                      </a>
+                    </div>
+                  ) : (
+                    <iframe 
+                      src={getEmbedUrl(selectedMaterial.content)} 
+                      className="w-full h-full border-0" 
+                      allowFullScreen 
+                      title="Material View"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    ></iframe>
+                  )}
                </div>
             </div>
           </div>

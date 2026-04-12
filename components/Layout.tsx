@@ -123,24 +123,24 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar Desktop - Minimalist Rail Sidebar */}
-      <aside className="w-20 hover:w-72 bg-white border-r border-slate-200 hidden md:flex flex-col sticky top-0 h-screen transition-all duration-300 group z-50 overflow-hidden">
-        <div className="p-6 flex flex-col gap-4 overflow-hidden">
-          <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain self-start transition-all duration-300 group-hover:h-14" />
-          <span className="font-black text-slate-800 text-[10px] leading-tight opacity-0 group-hover:opacity-40 uppercase tracking-[0.1em] transition-opacity duration-300 whitespace-normal break-words">{siteName}</span>
+      <aside className="w-16 hover:w-64 bg-white border-r border-slate-100 hidden md:flex flex-col sticky top-0 h-screen transition-all duration-300 group z-50 overflow-hidden">
+        <div className="p-4 flex flex-col gap-2 overflow-hidden items-center group-hover:items-start">
+          <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain transition-all duration-300 group-hover:h-10" />
+          <span className="font-black text-slate-800 text-[8px] leading-tight opacity-0 group-hover:opacity-30 uppercase tracking-widest transition-opacity duration-300 whitespace-nowrap">{siteName}</span>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto scrollbar-hide">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveView(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                 activeView === item.id 
-                  ? 'bg-slate-900 text-white shadow-2xl shadow-slate-200' 
+                  ? 'bg-slate-900 text-white shadow-lg' 
                   : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
               }`}
             >
-              <item.icon size={22} className="shrink-0" />
+              <item.icon size={18} className="shrink-0" />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                 {item.label}
               </span>
@@ -148,12 +148,11 @@ const Layout: React.FC<LayoutProps> = ({
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-50 overflow-hidden">
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50 flex items-center gap-4">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0"></div>
+        <div className="p-3 border-t border-slate-50 overflow-hidden">
+          <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100/50 flex items-center gap-3">
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0"></div>
              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-               <div className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Status</div>
-               <span className="text-[11px] font-bold text-slate-700">Terhubung</span>
+               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Online</span>
              </div>
           </div>
         </div>
@@ -162,20 +161,20 @@ const Layout: React.FC<LayoutProps> = ({
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Navbar */}
-        <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-10 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tighter truncate max-w-[150px] md:max-w-none">
+        <header className="h-12 md:h-14 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm md:text-base font-black text-slate-900 tracking-tight uppercase">
               {sidebarItems.find(i => i.id === activeView)?.label || 'Dashboard'}
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="relative" ref={notificationRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2.5 md:p-3.5 rounded-xl md:rounded-2xl transition-all relative ${showNotifications ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400 hover:text-slate-900'}`}
+                className={`p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all relative ${showNotifications ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:text-slate-900'}`}
               >
-                <Bell size={18} className="md:w-5 md:h-5" />
+                <Bell size={16} className="md:w-4 md:h-4" />
                 <NotificationBadge count={unreadCount} />
               </button>
 
@@ -242,7 +241,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="relative" ref={profileRef}>
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className={`flex items-center gap-2 p-1 md:p-1.5 md:pr-5 rounded-full transition-all ${
+                className={`flex items-center gap-2 p-1 md:p-1 md:pr-4 rounded-full transition-all ${
                   showProfileMenu 
                     ? 'bg-slate-900 text-white shadow-2xl' 
                     : 'bg-slate-50 border border-slate-100 text-slate-800'
@@ -254,7 +253,7 @@ const Layout: React.FC<LayoutProps> = ({
                   className={`w-8 h-8 md:w-9 md:h-9 rounded-full border-2 ${showProfileMenu ? 'border-white/20' : 'border-white'} bg-white object-cover`}
                 />
                 <div className="text-left hidden sm:block">
-                  <p className="text-xs font-black leading-none">{user.name.split(' ')[0]}</p>
+                  <p className="text-xs font-black leading-none">{user.name.toUpperCase()}</p>
                 </div>
                 <ChevronDown size={12} className={`transition-transform duration-300 hidden md:block ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -267,7 +266,7 @@ const Layout: React.FC<LayoutProps> = ({
                       className="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-white shadow-xl mb-3"
                       alt=""
                     />
-                    <h5 className="text-xs md:text-sm font-black text-slate-900">{user.name}</h5>
+                    <h5 className="text-xs md:text-sm font-black text-slate-900">{user.name.toUpperCase()}</h5>
                     <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Siswa Digital</p>
                   </div>
                   

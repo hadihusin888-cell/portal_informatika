@@ -48,10 +48,8 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
         const allTasks = (Array.isArray(t) ? t : []) as Task[];
         const allSubs = (Array.isArray(s) ? s : []) as Submission[];
         
-        // Filter Tugas: Jika bukan super admin, hanya ambil tugas dari mapel guru ini
-        const relevantTasks = currentUser.username === 'admin' 
-          ? allTasks 
-          : allTasks.filter(task => task.authorId === currentUser.id);
+        // Filter Tugas: Hanya ambil tugas yang dibuat oleh pengguna yang sedang login
+        const relevantTasks = allTasks.filter(task => task.authorId === currentUser.id);
         
         const relevantTaskIds = new Set(relevantTasks.map(t => t.id));
         
@@ -265,12 +263,23 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
                     <td className="px-4 py-6">
                       <div className="flex items-center gap-3">
                         <img src={student?.avatar} className="w-10 h-10 rounded-full bg-slate-100" />
-                        <div><p className="font-black text-slate-800 text-sm">{student?.name}</p><p className="text-[9px] text-slate-400 font-bold uppercase">Kelas {student?.classId}</p></div>
+                        <div><p className="font-black text-slate-800 text-sm uppercase">{student?.name}</p><p className="text-[9px] text-slate-400 font-bold uppercase">Kelas {student?.classId}</p></div>
                       </div>
                     </td>
                     <td className="px-10 py-6"><p className="font-bold text-slate-700">{task?.title}</p></td>
                     <td className="px-10 py-6 text-center"><span className={`text-2xl font-black ${isGraded ? 'text-indigo-600' : 'text-slate-200'}`}>{isGraded ? s.grade : '--'}</span></td>
-                    <td className="px-10 py-6 text-right"><button onClick={() => setGradeModal(s)} className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase ${isGraded ? 'bg-slate-100 text-slate-600' : 'bg-slate-900 text-white'}`}>{isGraded ? 'Edit' : 'Nilai'}</button></td>
+                    <td className="px-10 py-6 text-right">
+                      <button 
+                        onClick={() => setGradeModal(s)} 
+                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase transition-all ${
+                          isGraded 
+                            ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
+                            : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-lg'
+                        }`}
+                      >
+                        {isGraded ? 'Edit' : 'Nilai'}
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -366,14 +375,26 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
                    <ExternalLink size={16} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
              </div>
-             <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                    <label className="text-[10px] font-black uppercase text-slate-400">Skor (0-100)</label>
-                   <input type="number" value={gradeModal.grade} onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} className="w-full p-5 bg-slate-50 border-2 rounded-2xl font-black text-2xl" />
+                   <input 
+                    type="number" 
+                    value={gradeModal.grade} 
+                    onChange={e => setGradeModal({...gradeModal, grade: e.target.value})} 
+                    className="w-full p-5 bg-slate-50 border-2 rounded-2xl font-black text-2xl" 
+                   />
                 </div>
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-700 text-[10px] font-bold">Input nilai di samping dan simpan untuk mempublikasikan hasil.</div>
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-700 text-[10px] font-bold">
+                  Input nilai di samping dan simpan untuk mempublikasikan hasil.
+                </div>
              </div>
-             <textarea value={gradeModal.feedback ?? ''} onChange={e => setGradeModal({...gradeModal, feedback: e.target.value})} placeholder="Catatan perbaikan..." className="w-full p-5 bg-slate-50 border-2 rounded-2xl h-24 font-bold" />
+             <textarea 
+              value={gradeModal.feedback ?? ''} 
+              onChange={e => setGradeModal({...gradeModal, feedback: e.target.value})} 
+              placeholder="Catatan perbaikan..." 
+              className="w-full p-5 bg-slate-50 border-2 rounded-2xl h-24 font-bold" 
+             />
              <button onClick={handleGrade} className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase shadow-xl hover:bg-emerald-600 transition-all">Simpan Nilai</button>
           </div>
         </div>

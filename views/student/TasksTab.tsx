@@ -75,6 +75,16 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
       embedUrl = 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1];
     } else if (url.includes('docs.google.com')) {
       embedUrl = url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`;
+    } else if (url.includes('drive.google.com/file/d/')) {
+      // Handle Google Drive file preview
+      embedUrl = url.replace('/view', '/preview').replace('/edit', '/preview');
+    } else if (url.includes('canva.com/design/')) {
+      const baseUrl = url.split('?')[0];
+      embedUrl = baseUrl.includes('/view') ? `${baseUrl}?embed` : `${baseUrl}/view?embed`;
+    } else if (url.includes('wordwall.net/resource/')) {
+      embedUrl = url.replace('wordwall.net/resource/', 'wordwall.net/embed/resource/');
+    } else if (url.toLowerCase().endsWith('.pdf')) {
+      embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
     }
     return embedUrl;
   };
@@ -201,10 +211,10 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                   )}
                 </div>
                 <h4 className="text-lg font-black text-slate-800 mb-2 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">{t.title}</h4>
-                <div className="mt-auto pt-4">
+                <div className="mt-auto pt-4 flex gap-2">
                   <button 
                     onClick={() => { setSelectedTask(t); setIsSuccess(false); setLink(''); }}
-                    className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${
+                    className={`flex-[2] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${
                       submission 
                         ? 'bg-slate-50 text-slate-500 border border-slate-100' 
                         : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-xl'
@@ -212,6 +222,15 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                   >
                     {submission ? 'Lihat Detail' : 'Kerjakan Sekarang'} 
                   </button>
+                  <a 
+                    href={t.content} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center shadow-inner border border-slate-100"
+                    title="Buka di Tab Baru"
+                  >
+                    <ExternalLink size={18} />
+                  </a>
                 </div>
               </div>
             </div>
@@ -253,14 +272,61 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
 
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 <div className="flex-[3] bg-slate-100 p-8 overflow-hidden border-r border-slate-50 flex flex-col">
+                  <div className="bg-white border border-slate-200 p-4 rounded-2xl mb-4 flex items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
+                        <Info size={16} />
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-500 truncate">
+                        {selectedTask.content}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedTask.content);
+                          alert("Tautan berhasil disalin!");
+                        }}
+                        className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
+                      >
+                        Salin
+                      </button>
+                      <a href={selectedTask.content} target="_blank" rel="noreferrer" className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg flex items-center gap-2">
+                        Tab Baru <ArrowUpRight size={12} />
+                      </a>
+                    </div>
+                  </div>
                   <div className="flex-1 w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-white relative">
-                    <iframe 
-                      src={getEmbedUrl(selectedTask.content)} 
-                      className="w-full h-full border-0" 
-                      allowFullScreen 
-                      title="Task Content"
-                      loading="lazy"
-                    ></iframe>
+                    {selectedTask.type === 'link' && !['youtube', 'youtu.be', 'docs.google', 'drive.google', 'canva', 'wordwall'].some(p => selectedTask.content.includes(p)) ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center space-y-4 bg-slate-50">
+                        <div className="w-20 h-20 bg-white rounded-[1.5rem] shadow-lg flex items-center justify-center text-indigo-500">
+                          <Globe size={40} />
+                        </div>
+                        <div className="max-w-xs space-y-1">
+                          <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Tautan Luar</h4>
+                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                            Situs ini mungkin tidak mendukung tampilan langsung. Silakan buka di tab baru.
+                          </p>
+                        </div>
+                        <a 
+                          href={selectedTask.content} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl flex items-center gap-2"
+                        >
+                          Buka Tautan <ExternalLink size={14} />
+                        </a>
+                      </div>
+                    ) : (
+                      <iframe 
+                        src={getEmbedUrl(selectedTask.content)} 
+                        className="w-full h-full border-0" 
+                        allowFullScreen 
+                        title="Task Content"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      ></iframe>
+                    )}
                   </div>
                 </div>
 

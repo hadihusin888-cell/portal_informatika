@@ -99,88 +99,79 @@ const HomeTab: React.FC<HomeTabProps> = ({ user, materials = [], tasks = [], sub
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 text-black pb-24 max-w-[1600px] mx-auto">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 text-black pb-20 max-w-[1200px] mx-auto px-4">
       
-      {/* Welcome Banner */}
-      <section className="relative overflow-hidden bg-slate-900 rounded-3xl p-10 md:p-14 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] -mr-40 -mt-40 animate-pulse"></div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
-          <img src={user.avatar} className="w-36 h-36 rounded-full border-8 border-white/10 bg-slate-800 shadow-2xl object-cover" alt="Avatar" />
-          <div className="text-center md:text-left space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full text-xs font-black uppercase tracking-widest border border-white/10">
-              <Sparkles size={14} className="text-emerald-400" /> Portal Belajar Multi-Mapel
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-              {greeting}, <span className="text-emerald-400 italic">{user.name.split(' ')[0]}!</span>
+      {/* Welcome Banner - Minimalist */}
+      <section className="bg-slate-900 rounded-xl p-4 md:p-6 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+        <div className="relative z-10 flex items-center gap-4">
+          <img src={user.avatar} className="w-12 h-12 md:w-16 md:h-16 rounded-xl border-2 border-white/10 bg-slate-800 shadow-lg object-cover" alt="Avatar" />
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">
+              {greeting}, <span className="text-emerald-400 italic">{user.name.toUpperCase()}!</span>
             </h2>
-            <p className="text-slate-400 font-medium text-xl max-w-xl">
-              Siap untuk melanjutkan petualangan belajar di <span className="text-white font-bold">Kelas {user.classId}</span> hari ini?
+            <p className="text-slate-400 font-bold text-[9px] md:text-[10px] uppercase tracking-widest">
+              Kelas <span className="text-white">{user.classId}</span> • SMP Al Irsyad Surakarta
             </p>
           </div>
         </div>
       </section>
 
-      {/* Subjects Grid */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-           <div className="w-2 h-8 bg-indigo-500 rounded-full"></div>
-           <h3 className="text-2xl font-black text-slate-800 tracking-tight">Mata Pelajaran Kamu</h3>
+      {/* Subjects Grid - Even More Minimalist */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+           <div className="w-0.5 h-4 bg-indigo-500 rounded-full"></div>
+           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase">Mata Pelajaran</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
            {availableSubjects.map((subject, i) => {
              const theme = colorThemes[i % colorThemes.length];
              return (
                <div 
                   key={i} 
                   onClick={() => handleSubjectClick(subject)}
-                  className={`bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl ${theme.shadow} ${theme.border} hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden cursor-pointer`}
+                  className={`bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col items-center text-center gap-2`}
                >
-                  <div className={`absolute -right-4 -top-4 w-24 h-24 ${theme.secondary} rounded-full opacity-50 group-hover:scale-150 transition-transform`}></div>
-                  <div className="relative z-10 space-y-4">
-                     <div className={`w-14 h-14 ${theme.primary} text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform`}>
-                        <BookOpen size={28} />
-                     </div>
-                     <div>
-                        <h4 className={`text-xl font-black text-slate-800 leading-tight group-hover:${theme.text} transition-colors uppercase`}>{subject}</h4>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">E-Learning Module</p>
-                     </div>
-                     <div className={`flex items-center gap-2 text-[10px] font-black ${theme.text} uppercase tracking-widest mt-4`}>
-                        Masuk Kelas <ArrowRight size={14} />
-                     </div>
+                  <div className={`w-7 h-7 ${theme.primary} text-white rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>
+                    <BookOpen size={14} />
                   </div>
+                  <h4 className="text-[9px] font-black text-slate-800 leading-tight uppercase group-hover:text-indigo-600 transition-colors">{subject}</h4>
                </div>
              );
            })}
            {availableSubjects.length === 0 && (
-             <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <Briefcase className="mx-auto text-slate-200 mb-4" size={48} />
-                <p className="text-slate-400 font-black text-xs uppercase tracking-widest">Belum ada mata pelajaran yang didaftarkan Guru.</p>
+             <div className="col-span-full py-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <p className="text-slate-400 font-black text-[8px] uppercase tracking-widest">Belum ada mata pelajaran.</p>
              </div>
            )}
         </div>
       </section>
 
-      {/* Progress & Stats */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-10">
-           <div className="space-y-4">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Penyelesaian Tugas Keseluruhan</p>
-              <h3 className="text-4xl font-black text-slate-800">{completedTasksCount} / {tasks.length} Selesai</h3>
-              <p className="text-sm text-slate-500 font-medium">Terus tingkatkan semangat belajarmu untuk mencapai target akademik terbaik.</p>
+      {/* Progress & Stats - Cleaner */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2 bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between gap-4">
+           <div className="space-y-1">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Progres Tugas</p>
+              <h3 className="text-lg font-black text-slate-800 tracking-tight">{completedTasksCount} / {tasks.length} Selesai</h3>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Terus tingkatkan semangat belajarmu!</p>
            </div>
-           <div className="relative w-32 h-32 flex items-center justify-center">
+           <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90">
-                 <circle cx="50%" cy="50%" r="45%" stroke="#f1f5f9" strokeWidth="10" fill="transparent" />
-                 <circle cx="50%" cy="50%" r="45%" stroke="#10b981" strokeWidth="10" fill="transparent" strokeDasharray="282.7" strokeDashoffset={282.7 - (282.7 * progressPercentage) / 100} className="transition-all duration-1000" />
+                 <circle cx="50%" cy="50%" r="40%" stroke="#f1f5f9" strokeWidth="3" fill="transparent" />
+                 <circle cx="50%" cy="50%" r="40%" stroke="#10b981" strokeWidth="3" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * progressPercentage) / 100} className="transition-all duration-1000" />
               </svg>
-              <span className="absolute text-xl font-black">{progressPercentage}%</span>
+              <span className="absolute text-[9px] font-black">{progressPercentage}%</span>
            </div>
         </div>
 
-        <div className="bg-indigo-600 p-10 rounded-3xl text-white shadow-xl relative overflow-hidden flex flex-col justify-center gap-4">
-           <Trophy size={48} className="text-amber-400 animate-bounce" />
-           <h4 className="text-2xl font-black leading-tight">Membangun Masa Depan Melalui Digital</h4>
-           <p className="text-indigo-100 text-sm opacity-80">Portal E-Learning Al Irsyad Surakarta kini mendukung integrasi berbagai mata pelajaran dalam satu cloud.</p>
+        <div className="bg-indigo-600 p-4 rounded-xl text-white shadow-md flex items-center gap-4">
+           <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
+              <Trophy size={16} className="text-amber-400" />
+           </div>
+           <div>
+              <h4 className="text-[9px] font-black leading-tight uppercase tracking-widest">E-Learning</h4>
+              <p className="text-indigo-100 text-[7px] font-bold uppercase opacity-60 mt-0.5 tracking-widest">Al Irsyad Surakarta</p>
+           </div>
         </div>
       </section>
     </div>

@@ -99,6 +99,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
     setIsSaving(true);
     const studentData = { 
       ...form, 
+      name: (form.name || '').toUpperCase(),
       id: form.id || `std_${Date.now()}`, 
       role: 'STUDENT', 
       avatar: form.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username || 'default'}`, 
@@ -243,7 +244,7 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
                 </div>
               </div>
 
-              <h4 className="font-black text-slate-800 text-lg line-clamp-1 leading-tight">{s.name}</h4>
+              <h4 className="font-black text-slate-800 text-lg line-clamp-1 leading-tight uppercase">{s.name}</h4>
               <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-2">@{s.username}</p>
               
               {/* Display Password on Card */}

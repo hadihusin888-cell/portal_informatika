@@ -120,79 +120,79 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      <div className={`hidden md:flex flex-1 items-center justify-center p-20 relative overflow-hidden ${isAdmin ? 'bg-slate-900' : 'bg-blue-600'}`}>
-        <div className="relative z-10 text-white max-w-md space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
-          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl ${isAdmin ? 'bg-emerald-500' : 'bg-white text-blue-600'}`}>
-             {isAdmin ? <ShieldCheck size={40} /> : <GraduationCap size={40} />}
+      <div className={`hidden md:flex flex-1 items-center justify-center p-12 relative overflow-hidden ${isAdmin ? 'bg-slate-900' : 'bg-blue-600'}`}>
+        <div className="relative z-10 text-white max-w-sm space-y-6 animate-in fade-in slide-in-from-left-10 duration-1000">
+          <div className={`w-16 h-16 rounded-xl flex items-center justify-center shadow-xl ${isAdmin ? 'bg-emerald-500' : 'bg-white text-blue-600'}`}>
+             {isAdmin ? <ShieldCheck size={32} /> : <GraduationCap size={32} />}
           </div>
-          <div className="space-y-4">
-            <h2 className="text-6xl font-black leading-tight tracking-tighter">
+          <div className="space-y-3">
+            <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tighter">
               Portal Cloud<br/>
               <span className={isAdmin ? 'text-emerald-400 italic' : 'text-blue-200 italic'}>
                 {isAdmin ? 'Guru / Admin' : 'Siswa Digital'}
               </span>
             </h2>
-            <p className="text-xl text-white/70 font-medium leading-relaxed">
+            <p className="text-base text-white/70 font-medium leading-relaxed">
               {isAdmin ? "Manajemen kurikulum & pantau progres siswa." : "Akses materi digital & kumpulkan tugas Anda."}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 bg-white flex flex-col justify-center items-center px-8 py-12 md:px-20">
-        <div className="w-full max-w-md">
-          <button onClick={onBack} className="flex items-center gap-3 text-slate-400 hover:text-slate-900 mb-12 font-black text-xs uppercase tracking-widest group">
-            <ArrowLeft size={16} /> Beranda
+      <div className="flex-1 bg-white flex flex-col justify-center items-center px-6 py-8 md:px-12">
+        <div className="w-full max-w-sm">
+          <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 mb-6 font-black text-[9px] uppercase tracking-widest group">
+            <ArrowLeft size={12} /> Beranda
           </button>
           
-          <div className="mb-10 space-y-1">
-            <h3 className="text-5xl font-black text-slate-900 tracking-tighter">
+          <div className="mb-6 space-y-1">
+            <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
               {isAdmin ? 'Masuk Guru' : 'Masuk Siswa'}
             </h3>
-            <p className="text-slate-500 font-bold italic">SMP Al Irsyad Surakarta</p>
+            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">SMP Al Irsyad Surakarta</p>
           </div>
 
           {error.message && (
-            <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl animate-in fade-in slide-in-from-top-2 text-rose-600 font-black text-xs uppercase flex items-center gap-3">
-              <AlertCircle size={20} /> {error.message}
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl animate-in fade-in slide-in-from-top-2 text-rose-600 font-black text-[10px] uppercase flex items-center gap-2">
+              <AlertCircle size={16} /> {error.message}
             </div>
           )}
 
           {isEmptyDb && isAdmin && (
-            <button onClick={handleCreateInitialAdmin} disabled={isInitializing} className="mb-10 w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl">
+            <button onClick={handleCreateInitialAdmin} disabled={isInitializing} className="mb-8 w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg">
               {isInitializing ? "Inisialisasi..." : "Buat Akun Admin Pertama"}
             </button>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Username</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
               <div className="relative group">
-                <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-black text-slate-800 focus:border-blue-500/30" required />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl outline-none font-black text-slate-800 focus:border-blue-500/30 text-xs" required />
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center ml-2">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Kata Sandi</label>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Kata Sandi</label>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-14 pr-14 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold text-slate-800 focus:border-blue-500/30" required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-11 pr-11 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold text-slate-800 focus:border-blue-500/30 text-xs" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <button disabled={loading} className={`w-full py-6 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-[0.98] ${isAdmin ? 'bg-slate-900 text-white' : 'bg-blue-600 text-white'}`}>
-              {loading ? <RefreshCw className="animate-spin" size={26} /> : 'Login Sekarang'}
+            <button disabled={loading} className={`w-full py-3.5 rounded-xl font-black text-sm shadow-xl transition-all active:scale-[0.98] ${isAdmin ? 'bg-slate-900 text-white' : 'bg-blue-600 text-white'}`}>
+              {loading ? <RefreshCw className="animate-spin mx-auto" size={18} /> : 'Login'}
             </button>
             
             {!isAdmin && (
-              <p className="text-center text-slate-500 font-bold text-sm">
-                Belum punya akun? <button type="button" onClick={onNavigateSignup} className="text-blue-600 font-black hover:underline">Daftar Cloud Siswa</button>
+              <p className="text-center text-slate-400 font-bold text-xs">
+                Belum punya akun? <button type="button" onClick={onNavigateSignup} className="text-blue-600 font-black hover:underline">Daftar</button>
               </p>
             )}
           </form>

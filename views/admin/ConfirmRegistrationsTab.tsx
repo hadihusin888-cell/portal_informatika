@@ -58,6 +58,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
       // Ubah status menjadi ACTIVE. Listener di ManageStudentsTab akan menangkap ini.
       await db.update('users', student.id, { 
         status: 'ACTIVE',
+        name: (student.name || '').toUpperCase(),
         activatedAt: new Date().toISOString()
       });
       
@@ -128,7 +129,7 @@ const ConfirmRegistrationsTab: React.FC<ConfirmRegistrationsTabProps> = ({ trigg
                 className="w-24 h-24 rounded-full border-4 border-slate-50 shadow-xl bg-slate-50 mb-6" 
                 alt={s.name}
               />
-              <h4 className="font-black text-slate-800 text-lg leading-tight line-clamp-1">{s.name}</h4>
+              <h4 className="font-black text-slate-800 text-lg leading-tight line-clamp-1 uppercase">{s.name}</h4>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-6">Kelas {s.classId || 'N/A'}</p>
               
               <div className="flex gap-3 w-full">

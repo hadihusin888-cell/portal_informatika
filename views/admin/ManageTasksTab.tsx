@@ -34,7 +34,7 @@ const ManageTasksTab: React.FC<ManageTasksTabProps> = ({ triggerConfirm, classes
     try {
       const saved = await db.get('elearning_tasks');
       const all = Array.isArray(saved) ? saved : [];
-      setItems(currentUser.username === 'admin' ? all : all.filter((t: any) => t.authorId === currentUser.id));
+      setItems(all.filter((t: any) => t.authorId === currentUser.id));
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
