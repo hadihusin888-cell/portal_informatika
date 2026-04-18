@@ -2,7 +2,8 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { 
   BookOpen, ClipboardList, ArrowRight, Sparkles, 
-  Calendar, Clock, Trophy, Zap, Target, CheckCircle, Briefcase, GraduationCap
+  Calendar, Clock, Trophy, Zap, Target, CheckCircle, Briefcase, GraduationCap,
+  AlertTriangle, X, ChevronRight, ListTodo
 } from 'lucide-react';
 import { User } from '../../types';
 import { db } from '../../App.tsx';
@@ -18,6 +19,8 @@ interface HomeTabProps {
 
 const HomeTab: React.FC<HomeTabProps> = ({ user, materials = [], tasks = [], submissions = [], setActiveView, setSelectedSubjectFilter }) => {
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [hasShownPendingModal, setHasShownPendingModal] = useState(false);
 
   // Daftar tema warna untuk kartu mata pelajaran
   const colorThemes = [
@@ -86,6 +89,17 @@ const HomeTab: React.FC<HomeTabProps> = ({ user, materials = [], tasks = [], sub
   const completedTasksCount = useMemo(() => {
     return tasks.filter(t => submissions.some(s => s.taskId === t.id)).length;
   }, [tasks, submissions]);
+
+  const pendingTasks = useMemo(() => {
+    return tasks.filter(t => !submissions.some(s => s.taskId === t.id));
+  }, [tasks, submissions]);
+
+  useEffect(() => {
+    if (!hasShownPendingModal && pendingTasks.length > 0 && tasks.length > 0) {
+      setShowPendingModal(true);
+      setHasShownPendingModal(true);
+    }
+  }, [pendingTasks, tasks, hasShownPendingModal]);
 
   const progressPercentage = tasks.length > 0 
     ? Math.round((completedTasksCount / tasks.length) * 100) 
@@ -174,6 +188,59 @@ const HomeTab: React.FC<HomeTabProps> = ({ user, materials = [], tasks = [], sub
            </div>
         </div>
       </section>
+
+      {/* MODAL TUGAS BELUM DIKERJAKAN */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowPendingModal(false)}></div>
+           <div className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8 space-y-6">
+                 <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center shadow-inner">
+                       <AlertTriangle size={24} />
+                    </div>
+                    <button onClick={() => setShowPendingModal(false)} className="p-2 text-slate-300 hover:text-slate-900 transition-colors">
+                       <X size={20} />
+                    </button>
+                 </div>
+
+                 <div className="space-y-2">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Tugas Belum Selesai</h3>
+                    <p className="text-slate-500 font-medium text-xs leading-relaxed">Kamu memiliki <span className="text-rose-600 font-black">{pendingTasks.length} tugas</span> yang belum dikerjakan. Ayo segera selesaikan!</p>
+                 </div>
+
+                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                    {pendingTasks.map((t, i) => (
+                       <div key={i} className="group p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-100 transition-all">
+                          <div className="space-y-1">
+                             <div className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[8px] font-black uppercase tracking-widest inline-block border border-indigo-100">
+                                {t.subject}
+                             </div>
+                             <h4 className="font-black text-slate-800 text-xs line-clamp-1">{t.title}</h4>
+                          </div>
+                          <ChevronRight size={14} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+                       </div>
+                    ))}
+                 </div>
+
+                 <div className="space-y-3">
+                    <button 
+                       onClick={() => { setActiveView('tasks'); setShowPendingModal(false); }}
+                       className="w-full py-5 bg-slate-900 text-white rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-emerald-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                       <ListTodo size={16} /> Kerjakan Sekarang
+                    </button>
+                    <button 
+                       onClick={() => setShowPendingModal(false)}
+                       className="w-full py-5 bg-white text-slate-400 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:text-slate-900 transition-all"
+                    >
+                       Nanti Saja
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
