@@ -382,7 +382,15 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                             isSuccess ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600'
                           }`}
                         >
-                          {submitting ? <Loader2 size={24} className="animate-spin" /> : (isSuccess ? 'Berhasil Terkirim!' : 'Kirim Sekarang')}
+                          {submitting ? (
+                            <Loader2 size={24} className="animate-spin" />
+                          ) : isSuccess ? (
+                            'Berhasil Terkirim!'
+                          ) : link.trim() !== '' ? (
+                            'Kirim Sekarang'
+                          ) : (
+                            'Selesai Mengerjakan'
+                          )}
                         </button>
                       </div>
                     )}
