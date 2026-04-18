@@ -66,7 +66,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-5 justify-center lg:justify-start pt-4">
               <button 
-                onClick={onNavigateSignup}
+                onClick={() => onNavigateLogin('STUDENT')}
                 className="w-full sm:w-auto px-10 py-5 bg-emerald-600 text-white rounded-3xl font-black text-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-200 group active:scale-95"
               >
                 Mulai Belajar <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
