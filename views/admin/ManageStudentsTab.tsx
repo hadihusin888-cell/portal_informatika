@@ -97,12 +97,25 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
     }
 
     setIsSaving(true);
+    const cleanUsername = (form.username || '').trim().toLowerCase();
+    
+    if (!form.id) {
+      // Cek apakah username sudah ada
+      const existing = students.find(s => s.username?.toLowerCase() === cleanUsername);
+      if (existing) {
+        alert("Username ini sudah digunakan oleh siswa lain.");
+        setIsSaving(false);
+        return;
+      }
+    }
+
     const studentData = { 
       ...form, 
       name: (form.name || '').toUpperCase(),
-      id: form.id || `std_${Date.now()}`, 
+      username: cleanUsername,
+      id: form.id || `std_${cleanUsername}`, 
       role: 'STUDENT', 
-      avatar: form.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username || 'default'}`, 
+      avatar: form.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername || 'default'}`, 
       status: 'ACTIVE',
       createdAt: form.createdAt || new Date().toLocaleString('id-ID')
     } as User;
@@ -392,6 +405,15 @@ const ManageStudentsTab: React.FC<ManageStudentsTabProps> = ({ triggerConfirm, c
               </div>
 
               {/* Reset Password Action Area */}
+              <div className="pt-6 border-t border-slate-100">
+                <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
+                  <Info size={20} className="text-emerald-600 shrink-0" />
+                  <p className="text-[10px] text-emerald-800 font-bold leading-relaxed">
+                    Sistem menggunakan <span className="underline font-black">Aktivasi Otomatis</span>. Siswa dapat langsung login menggunakan username & password di atas. Akun Cloud mereka akan aktif secara otomatis saat login pertama kali.
+                  </p>
+                </div>
+              </div>
+
               {form.id && (
                 <div className="pt-6 border-t border-slate-100">
                   <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-6">

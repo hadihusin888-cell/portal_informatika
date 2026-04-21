@@ -88,28 +88,66 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
       const persistence = role === 'STUDENT' ? browserSessionPersistence : browserLocalPersistence;
       await setPersistence(auth, persistence);
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-
-      const userDoc = await getDoc(doc(firestore, "users", firebaseUser.uid));
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data() as User;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
+        const userDoc = await getDoc(doc(firestore, "users", firebaseUser.uid));
         
-        if (userData.role !== role) {
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+          if (userData.role !== role) {
+            await signOut(auth);
+            setError({message: `Akses Ditolak: Akun ini adalah ${userData.role}.`});
+            return;
+          }
+          if (userData.role === 'STUDENT' && userData.status !== 'ACTIVE') {
+            await signOut(auth);
+            setError({message: "Akun Anda sedang menunggu verifikasi Guru."});
+            return;
+          }
+        } else {
           await signOut(auth);
-          setError({message: `Akses Ditolak: Akun ini adalah ${userData.role}.`});
-          return;
+          setError({message: "Profil akun tidak ditemukan."});
         }
+      } catch (authErr: any) {
+        // AUTO-ACTIVATION LOGIC untuk akun yang dibuat admin tapi belum punya Auth record
+        if (role === 'STUDENT' && (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential')) {
+          // Cari di Firestore berdasarkan username (case-insensitive search via filter)
+          const q = query(collection(firestore, "users"), where("role", "==", "STUDENT"));
+          const querySnapshot = await getDocs(q);
+          
+          const matchingUserDoc = querySnapshot.docs.find(d => {
+            const data = d.data();
+            return data.username?.toLowerCase() === cleanUsername.toLowerCase() && data.password === password;
+          });
 
-        if (userData.role === 'STUDENT' && userData.status !== 'ACTIVE') {
-          await signOut(auth);
-          setError({message: "Akun Anda sedang menunggu verifikasi Guru."});
-          return;
+          if (matchingUserDoc) {
+            const data = matchingUserDoc.data() as User;
+            
+            if (data.status !== 'ACTIVE') {
+              setError({message: "Akun Anda sedang menunggu verifikasi Guru."});
+              return;
+            }
+
+            // Buat Auth user
+            const credential = await createUserWithEmailAndPassword(auth, email, password);
+            const newUid = credential.user.uid;
+
+            // Pindahkan data ke UID baru
+            const updatedData = { ...data, id: newUid };
+            await setDoc(doc(firestore, "users", newUid), updatedData);
+            
+            // Hapus dokumen lama jika ID-nya berbeda (misal std_...)
+            if (matchingUserDoc.id !== newUid) {
+              const { deleteDoc: firestoreDelete } = await import("firebase/firestore");
+              await firestoreDelete(doc(firestore, "users", matchingUserDoc.id));
+            }
+
+            onLogin(updatedData);
+            return;
+          }
         }
-      } else {
-        await signOut(auth);
-        setError({message: "Profil akun tidak ditemukan."});
+        throw authErr;
       }
     } catch (err: any) {
       setError({message: "Username atau Password salah."});
