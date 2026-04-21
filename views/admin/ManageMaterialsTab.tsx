@@ -36,7 +36,11 @@ const ManageMaterialsTab: React.FC<ManageMaterialsTabProps> = ({ triggerConfirm,
     try {
       const saved = await db.get('elearning_materials');
       const allMaterials = Array.isArray(saved) ? saved : [];
-      setItems(allMaterials.filter((m: any) => m.authorId === currentUser.id));
+      const isSuperAdmin = currentUser.username === 'admin';
+      
+      setItems(allMaterials.filter((m: any) => 
+        m.authorId === currentUser.id || (isSuperAdmin && !m.authorId)
+      ));
     } catch (err) {
       console.error(err);
     } finally {

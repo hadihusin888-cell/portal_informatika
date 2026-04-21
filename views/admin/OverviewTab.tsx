@@ -33,8 +33,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveView, currentUser })
         const allSubs = Array.isArray(submissions) ? submissions : [];
 
         // Filter data: Hanya ambil milik pengguna yang sedang login
-        const relevantMaterials = allMaterials.filter((m: any) => m.authorId === currentUser.id);
-        const relevantTasks = allTasks.filter((t: any) => t.authorId === currentUser.id);
+        const relevantMaterials = allMaterials.filter((m: any) => 
+          m.authorId === currentUser.id || (isSuperAdmin && !m.authorId)
+        );
+        const relevantTasks = allTasks.filter((t: any) => 
+          t.authorId === currentUser.id || (isSuperAdmin && !t.authorId)
+        );
         const relevantTaskIds = new Set(relevantTasks.map(t => t.id));
         const relevantUngraded = allSubs.filter((s: any) => relevantTaskIds.has(s.taskId) && !s.grade).length;
 

@@ -48,8 +48,12 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
         const allTasks = (Array.isArray(t) ? t : []) as Task[];
         const allSubs = (Array.isArray(s) ? s : []) as Submission[];
         
-        // Filter Tugas: Hanya ambil tugas yang dibuat oleh pengguna yang sedang login
-        const relevantTasks = allTasks.filter(task => task.authorId === currentUser.id);
+        const isSuperAdmin = currentUser.username === 'admin';
+
+        // Filter Tugas: Hanya ambil tugas yang berkaitan (milik sendiri atau legacy admin)
+        const relevantTasks = allTasks.filter(task => 
+          task.authorId === currentUser.id || (isSuperAdmin && !task.authorId)
+        );
         
         const relevantTaskIds = new Set(relevantTasks.map(t => t.id));
         
