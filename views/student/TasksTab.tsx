@@ -247,12 +247,12 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
 
       {/* Modal Detail Tugas */}
       {selectedTask && (
-        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-10 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-white w-full max-w-7xl h-full md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-              <div className="p-6 md:px-10 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
-                 <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${getTypeStyle(selectedTask.type).bg} ${getTypeStyle(selectedTask.type).text} shadow-inner`}>
-                      <ClipboardList size={28} />
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-slate-100/50">
+              <div className="p-4 md:px-8 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
+                 <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTypeStyle(selectedTask.type).bg} ${getTypeStyle(selectedTask.type).text} shadow-sm`}>
+                      <ClipboardList size={24} />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">{selectedTask.title}</h3>
@@ -271,8 +271,8 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
               </div>
 
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                <div className="flex-[3] bg-slate-100 p-8 overflow-hidden border-r border-slate-50 flex flex-col">
-                  <div className="bg-white border border-slate-200 p-4 rounded-2xl mb-4 flex items-center justify-between gap-4 shadow-sm">
+                <div className="flex-[3] bg-slate-100 p-2 md:p-4 overflow-hidden border-r border-slate-50 flex flex-col">
+                  <div className="bg-white border border-slate-200 p-2 rounded-xl mb-3 flex items-center justify-between gap-3 shadow-sm">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
                         <Info size={16} />
@@ -330,17 +330,17 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                   </div>
                 </div>
 
-                <div className="flex-1 bg-white p-8 overflow-y-auto flex flex-col space-y-10 scrollbar-hide">
-                  <div className="space-y-4">
+                <div className="flex-1 bg-white p-5 md:p-8 overflow-y-auto flex flex-col space-y-6 scrollbar-hide">
+                  <div className="space-y-3">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center gap-2">
                       <Info size={14} /> Instruksi Pengerjaan
                     </h4>
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-wrap bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-2xl border border-slate-100">
                       {selectedTask.description || 'Ikuti petunjuk di dalam modul untuk menyelesaikan tugas ini.'}
                     </p>
                   </div>
 
-                  <div className="pt-8 border-t border-slate-50 space-y-6">
+                  <div className="pt-6 border-t border-slate-50 space-y-6">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center gap-2">
                       <Zap size={14} className="text-amber-500" /> Status Pengumpulan
                     </h4>
