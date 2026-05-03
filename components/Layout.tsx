@@ -120,12 +120,26 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [user.role, sidebarItems]);
 
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar Desktop - Minimalist Rail Sidebar */}
       <aside className="w-16 hover:w-64 bg-white border-r border-slate-100 hidden md:flex flex-col sticky top-0 h-screen transition-all duration-300 group z-50 overflow-hidden">
-        <div className="p-4 flex flex-col gap-2 overflow-hidden items-center group-hover:items-start">
-          <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain transition-all duration-300 group-hover:h-10" />
+        <div className="p-4 flex flex-col gap-2 overflow-hidden items-center group-hover:items-start shrink-0">
+          {logoUrl && logoLoaded ? (
+            <img 
+              src={logoUrl} 
+              alt="Logo" 
+              referrerPolicy="no-referrer"
+              onError={() => setLogoLoaded(false)}
+              className="h-8 w-auto object-contain transition-all duration-300 group-hover:h-10" 
+            />
+          ) : (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-[10px] shadow-sm shrink-0">
+              AI
+            </div>
+          )}
           <span className="font-black text-slate-800 text-[8px] leading-tight opacity-0 group-hover:opacity-30 uppercase tracking-widest transition-opacity duration-300 whitespace-nowrap">{siteName}</span>
         </div>
 

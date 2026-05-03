@@ -165,16 +165,48 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ settings, setSettings, user, 
               </div>
 
               <div className="space-y-4">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo Sekolah URL</label>
-                <div className="relative group">
-                  <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
-                  <input 
-                    value={settings.logoUrl || ''} 
-                    onChange={e => setSettings({...settings, logoUrl: e.target.value})} 
-                    className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-bold text-slate-600 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-inner" 
-                    placeholder="https://link-gambar-logo.png"
-                  />
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo Sekolah URL</label>
+                  <button 
+                    onClick={() => setSettings({...settings, logoUrl: 'https://www.alirsyad.or.id/wp-content/uploads/download/alirsyad-alislamiyyah.png'})}
+                    className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest"
+                  >
+                    Reset Default
+                  </button>
                 </div>
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="relative group flex-1">
+                    <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
+                    <input 
+                      value={settings.logoUrl || ''} 
+                      onChange={e => setSettings({...settings, logoUrl: e.target.value})} 
+                      className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-[1.8rem] font-bold text-slate-600 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-inner" 
+                      placeholder="https://link-gambar-logo.png"
+                    />
+                  </div>
+                  <div className="w-24 h-24 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner group relative">
+                    {settings.logoUrl ? (
+                      <img 
+                        src={settings.logoUrl} 
+                        alt="Logo Preview" 
+                        referrerPolicy="no-referrer"
+                        className="max-w-[80%] max-h-[80%] object-contain transition-transform group-hover:scale-110" 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '';
+                          (e.target as HTMLImageElement).parentElement?.classList.add('bg-rose-50');
+                        }}
+                      />
+                    ) : (
+                      <div className="text-slate-200"><ImageIcon size={32} /></div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-[8px] font-black text-white bg-black/40 px-2 py-1 rounded-full uppercase">Preview</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold ml-1 italic">
+                  * Gunakan URL gambar PNG transparan untuk hasil terbaik.
+                </p>
               </div>
 
               <div className="space-y-4">

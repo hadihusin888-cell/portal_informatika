@@ -9,16 +9,26 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSignup, settings }) => {
+  const [logoLoaded, setLogoLoaded] = React.useState(true);
+
   return (
     <div className="bg-[#fdfdfd] min-h-screen selection:bg-emerald-100">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 glass-effect h-20 px-6 lg:px-20 flex items-center justify-between border-b border-slate-100/50">
         <div className="flex items-center gap-4">
-          <img 
-            src={settings.logoUrl} 
-            alt="Logo SMP Al Irsyad" 
-            className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
-          />
+          {settings.logoUrl && logoLoaded ? (
+            <img 
+              src={settings.logoUrl} 
+              alt="Logo" 
+              referrerPolicy="no-referrer"
+              onError={() => setLogoLoaded(false)}
+              className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg">
+              AI
+            </div>
+          )}
           <div className="hidden lg:block h-6 w-[1px] bg-slate-200 mx-1"></div>
           <h1 className="hidden sm:block text-lg font-black tracking-tight text-slate-800">
             AL IRSYAD <span className="text-emerald-600">SURAKARTA</span>
@@ -159,11 +169,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateLogin, onNavigateSi
       <footer className="py-20 px-6 bg-slate-950 text-slate-500 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-10">
           <div className="flex items-center gap-4">
-            <img 
-              src={settings.logoUrl} 
-              alt="Logo SMP Al Irsyad" 
-              className="h-16 w-auto object-contain" 
-            />
+            {settings.logoUrl && logoLoaded ? (
+              <img 
+                src={settings.logoUrl} 
+                alt="Logo" 
+                referrerPolicy="no-referrer"
+                className="h-16 w-auto object-contain" 
+              />
+            ) : (
+              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-2xl">
+                AI
+              </div>
+            )}
             <span className="text-2xl font-black text-white tracking-tighter italic">AL IRSYAD <span className="text-emerald-500">SURAKARTA</span></span>
           </div>
           <div className="h-[1px] w-full max-w-md bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>

@@ -132,9 +132,17 @@ const Signup: React.FC<SignupProps> = ({ onBack, onSignup, logoUrl }) => {
         </button>
 
         <div className="text-center mb-12 space-y-3">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm p-2 border border-slate-50">
-             <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
-          </div>
+          {logoUrl && (
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm p-2 border border-slate-50">
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain" 
+                onError={(e) => (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/initials/svg?seed=AI&backgroundColor=059669'}
+              />
+            </div>
+          )}
           <h3 className="text-4xl font-black text-slate-900 tracking-tight">Registrasi Cloud</h3>
           <p className="text-slate-400 font-bold text-sm italic">Siswa Digital SMP Al Irsyad Surakarta</p>
         </div>

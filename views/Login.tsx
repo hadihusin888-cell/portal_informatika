@@ -183,11 +183,24 @@ const Login: React.FC<LoginProps> = ({ role, onBack, onLogin, onNavigateSignup, 
             <ArrowLeft size={12} /> Beranda
           </button>
           
-          <div className="mb-6 space-y-1">
-            <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
-              {isAdmin ? 'Masuk Guru' : 'Masuk Siswa'}
-            </h3>
-            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">SMP Al Irsyad Surakarta</p>
+          <div className="mb-6 space-y-4">
+            {logoUrl && (
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm p-1 border border-slate-50">
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-contain" 
+                  onError={(e) => (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/initials/svg?seed=AI&backgroundColor=059669'}
+                />
+              </div>
+            )}
+            <div className="space-y-1">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
+                {isAdmin ? 'Masuk Guru' : 'Masuk Siswa'}
+              </h3>
+              <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">SMP Al Irsyad Surakarta</p>
+            </div>
           </div>
 
           {error.message && (
