@@ -140,8 +140,8 @@ const App: React.FC = () => {
   const [dbError, setDbError] = useState<boolean>(false);
   const [settings, setSettings] = useState<SiteSettings>({
     logoUrl: 'https://www.alirsyad.or.id/wp-content/uploads/download/alirsyad-alislamiyyah.png',
-    heroImageUrl: 'https://media.vitecoelearning.eu/vitecoelearning.eu/wp-content/uploads/2023/09/e-learning-1-fb-EN.jpg',
-    siteName: 'e-learning SMP AL IRSYAD SURAKARTA'
+    heroImageUrl: 'https://cdn.fpt-is.com/vi/he-thong-elearning-1.png',
+    siteName: 'Informatika SMP Al Irsyad Surakarta'
   });
 
   useEffect(() => {
@@ -156,15 +156,33 @@ const App: React.FC = () => {
 
       if (firebaseUser) {
         // PERBAIKAN: Gunakan onSnapshot untuk profil agar status selalu up-to-date dari server
+        // Cek beberapa koleksi untuk memastikan user ditemukan (Solusi untuk masalah login)
         profileUnsubscribe = onSnapshot(doc(firestore, "users", firebaseUser.uid), async (docSnap) => {
+          let userData: User | null = null;
+          
           if (docSnap.exists()) {
-            const userData = { id: docSnap.id, ...docSnap.data() } as User;
-            
+            userData = { id: docSnap.id, ...docSnap.data() } as User;
+          } else {
+            // Jika tidak ada di 'users', cek di 'elearning_students_list'
+            const studentDoc = await db.getSingle('elearning_students_list', firebaseUser.uid);
+            if (studentDoc) {
+              userData = studentDoc as User;
+            } else {
+              // Terakhir cek 'elearning_pending_students'
+              const pendingDoc = await db.getSingle('elearning_pending_students', firebaseUser.uid);
+              if (pendingDoc) {
+                userData = pendingDoc as User;
+              }
+            }
+          }
+
+          if (userData) {
+            const status = (userData.status as string)?.toUpperCase();
             // Logika Akses: Hanya izinkan ACTIVE masuk ke Dashboard
-            if (userData.role === 'ADMIN' || (userData.role === 'STUDENT' && userData.status === 'ACTIVE')) {
+            if (userData.role === 'ADMIN' || (userData.role === 'STUDENT' && status === 'ACTIVE')) {
               setUser(userData);
               setView('dashboard');
-            } else if (userData.role === 'STUDENT' && userData.status === 'PENDING') {
+            } else if (userData.role === 'STUDENT' && status === 'PENDING') {
               // Jika status PENDING, paksa logout kecuali jika user sedang di halaman signup
               if (viewRef.current !== 'signup') {
                 await signOut(auth);
@@ -175,7 +193,7 @@ const App: React.FC = () => {
               }
             }
           } else {
-            // Jika dokumen user tidak ada (mungkin dihapus admin)
+            // Jika dokumen user tidak ada sama sekali atau tidak ditemukan di koleksi manapun
             if (viewRef.current !== 'signup') {
               setUser(null);
               setView('landing');

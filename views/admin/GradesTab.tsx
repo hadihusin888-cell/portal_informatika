@@ -50,9 +50,11 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
         
         const isSuperAdmin = currentUser.username === 'admin';
 
-        // Filter Tugas: Hanya ambil tugas yang berkaitan (milik sendiri atau legacy admin)
+        // Filter Tugas: Ambil tugas milik sendiri, atau tugas tanpa author (legacy), atau tugas dengan Mapel yang sama
         const relevantTasks = allTasks.filter(task => 
-          task.authorId === currentUser.id || (isSuperAdmin && !task.authorId)
+          task.authorId === currentUser.id || 
+          (isSuperAdmin && !task.authorId) ||
+          (currentUser.subject && task.subject === currentUser.subject)
         );
         
         const relevantTaskIds = new Set(relevantTasks.map(t => t.id));

@@ -273,35 +273,34 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
         )}
       </section>
 
-      {/* Material Modal */}
       {selectedMaterial && (
-        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-300">
-          <div className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-slate-100/50">
-            <div className="p-4 md:px-8 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-               <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTypeStyle(selectedMaterial.type).bg} ${getTypeStyle(selectedMaterial.type).text} shadow-sm`}>
-                    <BookOpen size={24} />
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-0 md:p-4 animate-in fade-in zoom-in-95 duration-300 text-black">
+          <div className="bg-white w-full h-full md:max-w-6xl md:h-auto md:max-h-[90vh] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-slate-100/50">
+            <div className="p-4 md:px-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+               <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getTypeStyle(selectedMaterial.type).bg} ${getTypeStyle(selectedMaterial.type).text} shadow-sm shrink-0`}>
+                    <BookOpen size={20} />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none">{selectedMaterial.title}</h3>
-                    <div className="flex items-center gap-2 mt-2">
-                       <span className={`${getSubjectColor(selectedMaterial.subject).text} font-black text-[10px] uppercase tracking-widest ${getSubjectColor(selectedMaterial.subject).bg} px-3 py-1 rounded-lg border ${getSubjectColor(selectedMaterial.subject).border}`}>{selectedMaterial.subject}</span>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none truncate max-w-[150px] md:max-w-none">{selectedMaterial.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                       <span className={`${getSubjectColor(selectedMaterial.subject).text} font-black text-[8px] uppercase tracking-widest ${getSubjectColor(selectedMaterial.subject).bg} px-2 py-0.5 rounded-md border ${getSubjectColor(selectedMaterial.subject).border}`}>{selectedMaterial.subject}</span>
                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
-                       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
-                         <Globe size={12} /> E-Learning Al Irsyad Surakarta
+                       <p className="text-slate-400 font-bold text-[8px] uppercase tracking-widest flex items-center gap-1">
+                         <Globe size={10} /> E-Learning
                        </p>
                     </div>
                   </div>
                </div>
-               <button onClick={() => setSelectedMaterial(null)} className="p-4 bg-slate-50 text-slate-400 rounded-3xl hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90">
-                  <X size={28} />
+               <button onClick={() => setSelectedMaterial(null)} className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90">
+                  <X size={20} />
                </button>
             </div>
 
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
               {/* Left: Content Viewer */}
-              <div className="flex-[3] bg-slate-100 p-2 md:p-4 overflow-hidden border-r border-slate-50 flex flex-col">
-                <div className="flex-1 w-full bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-white relative group">
+              <div className="lg:flex-[4] bg-slate-50 p-1 md:p-2 overflow-hidden border-r border-slate-50 flex flex-col">
+                <div className="flex-1 w-full bg-white rounded-xl shadow-sm overflow-hidden relative group">
                   {selectedMaterial.type === 'link' && !['youtube', 'youtu.be', 'docs.google', 'drive.google', 'canva', 'wordwall'].some(p => selectedMaterial.content.includes(p)) ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center space-y-6 bg-slate-50">
                       <div className="w-20 h-20 bg-white rounded-[1.5rem] shadow-xl flex items-center justify-center text-indigo-500">
@@ -336,33 +335,33 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
               </div>
 
               {/* Right: Details & Actions */}
-              <div className="flex-1 bg-white p-6 md:p-8 overflow-y-auto flex flex-col space-y-8 scrollbar-hide">
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                    <Info size={14} /> Deskripsi Materi
+              <div className="flex-1 bg-white p-4 md:p-6 overflow-y-auto flex flex-col space-y-4 scrollbar-hide shrink-0 lg:w-[350px]">
+                <div className="space-y-2">
+                  <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Info size={12} /> Deskripsi Materi
                   </h4>
-                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
                     {selectedMaterial.description || 'Pahami materi ini dengan seksama untuk menunjang proses pembelajaran mandiri Anda.'}
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-6 border-t border-slate-50">
-                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                    <Zap size={14} className="text-amber-500" /> Tautan Terkait
+                <div className="space-y-3 pt-4 border-t border-slate-50">
+                   <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Zap size={12} className="text-amber-500" /> Tautan Terkait
                   </h4>
                   
-                  <div className="space-y-3">
-                    <div className="p-4 bg-white border border-slate-100 rounded-xl flex items-center justify-between gap-4 shadow-sm group">
-                       <p className="text-[10px] text-slate-400 font-bold truncate flex-1">{selectedMaterial.content}</p>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between gap-3 shadow-sm group">
+                       <p className="text-[8px] text-slate-400 font-bold truncate flex-1">{selectedMaterial.content}</p>
                        <button 
                          onClick={() => {
                            navigator.clipboard.writeText(selectedMaterial.content);
                            alert("Tautan berhasil disalin!");
                          }}
-                         className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"
+                         className="p-1.5 text-slate-300 hover:text-indigo-600 transition-colors"
                          title="Salin Tautan"
                        >
-                         <Zap size={14} />
+                         <Zap size={12} />
                        </button>
                     </div>
 
@@ -370,16 +369,16 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({ materials = [], initialSubj
                       href={selectedMaterial.content} 
                       target="_blank" 
                       rel="noreferrer" 
-                      className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"
+                      className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg"
                     >
-                      Buka di Tab Baru <ArrowUpRight size={18} />
+                      Buka di Tab Baru <ArrowUpRight size={16} />
                     </a>
                   </div>
                 </div>
 
-                <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
-                  <Info size={18} className="text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-blue-700 font-bold leading-relaxed">
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
+                  <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-[9px] text-blue-700 font-bold leading-relaxed">
                     Siswa disarankan untuk mencatat poin penting dari materi ini ke dalam buku catatan masing-masing.
                   </p>
                 </div>

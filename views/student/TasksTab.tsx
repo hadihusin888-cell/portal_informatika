@@ -245,34 +245,33 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
         )}
       </section>
 
-      {/* Modal Detail Tugas */}
       {selectedTask && (
-        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-slate-100/50">
-              <div className="p-4 md:px-8 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
-                 <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTypeStyle(selectedTask.type).bg} ${getTypeStyle(selectedTask.type).text} shadow-sm`}>
-                      <ClipboardList size={24} />
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-0 md:p-4 animate-in fade-in zoom-in-95 duration-300 text-black">
+            <div className="bg-white w-full h-full md:max-w-6xl md:h-auto md:max-h-[90vh] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-slate-100/50">
+              <div className="p-4 md:px-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+                 <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getTypeStyle(selectedTask.type).bg} ${getTypeStyle(selectedTask.type).text} shadow-sm shrink-0`}>
+                      <ClipboardList size={20} />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">{selectedTask.title}</h3>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-indigo-600 font-black text-[9px] uppercase tracking-widest">{selectedTask.subject}</span>
+                      <h3 className="text-lg font-black text-slate-800 tracking-tight leading-none truncate max-w-[150px] md:max-w-none">{selectedTask.title}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-indigo-600 font-black text-[8px] uppercase tracking-widest">{selectedTask.subject}</span>
                         <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-                        <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.15em] flex items-center gap-1.5">
-                          <Calendar size={12} /> {selectedTask.dueDate}
+                        <p className="text-slate-400 font-bold text-[8px] uppercase tracking-widest flex items-center gap-1">
+                          <Calendar size={10} /> {selectedTask.dueDate}
                         </p>
                       </div>
                     </div>
                  </div>
-                 <button onClick={() => setSelectedTask(null)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
-                    <X size={24} />
+                 <button onClick={() => setSelectedTask(null)} className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-50 hover:text-rose-500 transition-all">
+                    <X size={20} />
                  </button>
               </div>
 
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                <div className="flex-[3] bg-slate-100 p-2 md:p-4 overflow-hidden border-r border-slate-50 flex flex-col">
-                  <div className="bg-white border border-slate-200 p-2 rounded-xl mb-3 flex items-center justify-between gap-3 shadow-sm">
+                <div className="lg:flex-[4] bg-slate-50 p-1 md:p-2 overflow-hidden border-r border-slate-50 flex flex-col">
+                  <div className="bg-white border border-slate-200 p-2 rounded-xl mb-2 flex items-center justify-between gap-3 shadow-sm shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
                         <Info size={16} />
@@ -287,16 +286,16 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                           navigator.clipboard.writeText(selectedTask.content);
                           alert("Tautan berhasil disalin!");
                         }}
-                        className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
+                        className="px-3 py-1.5 bg-slate-50 text-slate-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
                       >
                         Salin
                       </button>
-                      <a href={selectedTask.content} target="_blank" rel="noreferrer" className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg flex items-center gap-2">
-                        Tab Baru <ArrowUpRight size={12} />
+                      <a href={selectedTask.content} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg flex items-center gap-2">
+                        Tab Baru <ArrowUpRight size={10} />
                       </a>
                     </div>
                   </div>
-                  <div className="flex-1 w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-white relative">
+                  <div className="flex-1 w-full bg-white rounded-xl shadow-sm overflow-hidden relative">
                     {selectedTask.type === 'link' && !['youtube', 'youtu.be', 'docs.google', 'drive.google', 'canva', 'wordwall'].some(p => selectedTask.content.includes(p)) ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center space-y-4 bg-slate-50">
                         <div className="w-20 h-20 bg-white rounded-[1.5rem] shadow-lg flex items-center justify-center text-indigo-500">
@@ -330,60 +329,58 @@ const TasksTab: React.FC<TasksTabProps> = ({ user, tasks = [], submissions = [],
                   </div>
                 </div>
 
-                <div className="flex-1 bg-white p-5 md:p-8 overflow-y-auto flex flex-col space-y-6 scrollbar-hide">
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center gap-2">
-                      <Info size={14} /> Instruksi Pengerjaan
+                <div className="flex-1 bg-white p-4 md:p-6 overflow-y-auto flex flex-col space-y-4 scrollbar-hide shrink-0 lg:w-[350px]">
+                  <div className="space-y-2">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <Info size={12} /> Instruksi Pengerjaan
                     </h4>
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p className="text-[11px] text-slate-600 font-medium leading-relaxed whitespace-pre-wrap bg-slate-50 p-3 rounded-xl border border-slate-100">
                       {selectedTask.description || 'Ikuti petunjuk di dalam modul untuk menyelesaikan tugas ini.'}
                     </p>
                   </div>
 
-                  <div className="pt-6 border-t border-slate-50 space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center gap-2">
-                      <Zap size={14} className="text-amber-500" /> Status Pengumpulan
+                  <div className="pt-4 border-t border-slate-50 space-y-4">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <Zap size={12} className="text-amber-500" /> Status Pengumpulan
                     </h4>
 
                     {currentSubmission ? (
-                      <div className="space-y-4">
-                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-2xl relative overflow-hidden text-center">
-                           <div className="relative z-10 space-y-2">
-                              <BadgeCheck size={32} className="text-emerald-600 mx-auto" />
-                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Sudah Terkirim</p>
-                              <p className="text-[10px] text-slate-500 font-bold">{currentSubmission.submittedAt}</p>
-                           </div>
+                      <div className="space-y-3">
+                        <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl relative overflow-hidden text-center">
+                           <BadgeCheck size={28} className="text-emerald-600 mx-auto mb-2" />
+                           <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Sudah Terkirim</p>
+                           <p className="text-[9px] text-slate-500 font-bold">{currentSubmission.submittedAt}</p>
                         </div>
-                        <div className="bg-slate-900 p-8 rounded-2xl text-white shadow-xl text-center">
-                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Nilai Akhir</p>
-                           <div className="text-5xl font-black text-white">
+                        <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl text-center">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Nilai Akhir</p>
+                           <div className="text-4xl font-black text-white">
                               {currentSubmission.grade ?? '--'}
                            </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         {selectedTask.isSubmissionEnabled && (
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tautan URL Hasil Kerja</label>
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Tautan URL Hasil Kerja</label>
                             <input 
                               type="url"
                               value={link} 
                               onChange={e => setLink(e.target.value)} 
                               placeholder="https://docs.google.com/..." 
-                              className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner" 
+                              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-xs outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-inner" 
                             />
                           </div>
                         )}
                         <button 
                           onClick={handleSubmit} 
                           disabled={submitting || isSuccess} 
-                          className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-4 shadow-xl active:scale-[0.98] ${
+                          className={`w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] ${
                             isSuccess ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600'
                           }`}
                         >
                           {submitting ? (
-                            <Loader2 size={24} className="animate-spin" />
+                            <Loader2 size={20} className="animate-spin" />
                           ) : isSuccess ? (
                             'Berhasil Terkirim!'
                           ) : link.trim() !== '' ? (
