@@ -162,12 +162,42 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     let tableRows = '';
-    filteredSubs.forEach(s => {
+    filteredSubs.forEach((s, index) => {
       const student = allUsers.find(st => st.id === s.studentId);
       const task = tasks.find(t => t.id === s.taskId);
-      tableRows += `<tr><td>${student?.name || 'N/A'}</td><td>${task?.title || 'N/A'} (Kelas ${student?.classId || 'N/A'})</td><td style="text-align:center;">${s.grade ?? '--'}</td></tr>`;
+      tableRows += `<tr style="border-bottom: 2px solid #f1f5f9;"><td style="padding: 12px; text-align: center; font-family: sans-serif; font-size: 12px; font-weight: bold;">${index + 1}</td><td style="padding: 12px; font-family: sans-serif; font-size: 12px;">${student?.name || 'N/A'}</td><td style="padding: 12px; font-family: sans-serif; font-size: 12px;">${task?.title || 'N/A'} (Kelas ${student?.classId || 'N/A'})</td><td style="padding: 12px; text-align:center; font-family: sans-serif; font-size: 14px; font-weight: 800;">${s.grade ?? '--'}</td></tr>`;
     });
-    printWindow.document.write(`<html><body><h1>Rekap Nilai ${currentUser.subject}</h1><table><thead><tr><th>Nama</th><th>Tugas</th><th>Skor</th></tr></thead><tbody>${tableRows}</tbody></table></body><script>window.onload=function(){window.print();window.close();}</script></html>`);
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Rekapan Nilai</title>
+          <style>
+            body { padding: 40px; font-family: sans-serif; }
+            h1 { font-weight: 900; letter-spacing: -0.025em; text-transform: uppercase; color: #0f172a; margin-bottom: 8px; }
+            p { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 32px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; padding: 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; background: #f8fafc; }
+            td { vertical-align: middle; }
+          </style>
+        </head>
+        <body>
+          <h1>Rekapan Nilai</h1>
+          <p>Mata Pelajaran: ${currentUser.subject || 'Informatika'}</p>
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: center; width: 50px;">No</th>
+                <th>Nama Siswa</th>
+                <th>Tugas / Kelas</th>
+                <th style="text-align: center;">Skor</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </body>
+        <script>window.onload=function(){window.print();window.close();}</script>
+      </html>
+    `);
     printWindow.document.close();
   };
 
@@ -251,21 +281,24 @@ const GradesTab: React.FC<GradesTabProps> = ({ triggerConfirm, classes, currentU
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 uppercase text-[10px] font-black text-slate-400">
               <tr>
-                <th className="px-10 py-6"><button onClick={toggleSelectAll}>{selectedIds.size === displayedSubs.length && displayedSubs.length > 0 ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} />}</button></th>
+                <th className="px-6 py-6 text-center">No</th>
+                <th className="px-4 py-6"><button onClick={toggleSelectAll}>{selectedIds.size === displayedSubs.length && displayedSubs.length > 0 ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} />}</button></th>
                 <th className="px-4 py-6">Siswa</th>
                 <th className="px-10 py-6">Tugas</th>
                 <th className="px-10 py-6 text-center">Skor</th>
                 <th className="px-10 py-6 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {displayedSubs.map(s => {
+            <tbody className="divide-y divide-slate-100">
+              {displayedSubs.map((s, index) => {
                 const student = allUsers.find(st => st.id === s.studentId);
                 const task = tasks.find(t => t.id === s.taskId);
                 const isGraded = s.grade !== undefined && s.grade !== null;
+                const rowNo = (currentPage - 1) * displayLimit + index + 1;
                 return (
-                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-10 py-6"><button onClick={() => toggleSelect(s.id)}>{selectedIds.has(s.id) ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} className="text-slate-200" />}</button></td>
+                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100/50">
+                    <td className="px-6 py-6 text-center font-black text-slate-300 text-xs">{rowNo}</td>
+                    <td className="px-4 py-6"><button onClick={() => toggleSelect(s.id)}>{selectedIds.has(s.id) ? <CheckSquare size={20} className="text-indigo-600" /> : <Square size={20} className="text-slate-200" />}</button></td>
                     <td className="px-4 py-6">
                       <div className="flex items-center gap-3">
                         <img src={student?.avatar} className="w-10 h-10 rounded-full bg-slate-100" />
